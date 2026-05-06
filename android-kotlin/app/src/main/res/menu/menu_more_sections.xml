@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_more_aceite"
+        android:title="@string/nav_aceite" />
+    <item
+        android:id="@+id/nav_more_fila"
+        android:title="@string/nav_fila" />
+    <item
+        android:id="@+id/nav_more_kpi"
+        android:title="@string/nav_kpi" />
+    <item
+        android:id="@+id/nav_more_logs"
+        android:title="@string/nav_logs" />
+    <item
+        android:id="@+id/nav_more_configuracoes"
+        android:title="@string/nav_configuracoes" />
+</menu>

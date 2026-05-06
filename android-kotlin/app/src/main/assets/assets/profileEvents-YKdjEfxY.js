@@ -1,0 +1,1 @@
+const t="profiles-updated",n="profilesUpdatedAt",r=()=>{try{localStorage.setItem(n,String(Date.now()))}catch{}window.dispatchEvent(new Event(t))},d=e=>{const o=s=>{s.key===n&&e()};return window.addEventListener(t,e),window.addEventListener("storage",o),()=>{window.removeEventListener(t,e),window.removeEventListener("storage",o)}};export{r as e,d as o};

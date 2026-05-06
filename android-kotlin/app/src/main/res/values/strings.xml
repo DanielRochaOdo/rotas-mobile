@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Odontoart Rotas</string>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_agenda">Agenda</string>
+    <string name="nav_visitas">Visitas</string>
+    <string name="nav_clientes">Clientes</string>
+    <string name="nav_more">Mais</string>
+    <string name="nav_aceite">Aceite Digital</string>
+    <string name="nav_fila">Fila</string>
+    <string name="nav_kpi">KPI</string>
+    <string name="nav_logs">Logs</string>
+    <string name="nav_configuracoes">Configuracoes</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_agenda">Agenda</string>
+    <string name="title_visitas">Visitas</string>
+    <string name="title_clientes">Clientes</string>
+    <string name="title_aceite">Aceite Digital</string>
+    <string name="title_fila">Fila</string>
+    <string name="title_kpi">KPI</string>
+    <string name="title_logs">Logs</string>
+    <string name="title_configuracoes">Configuracoes</string>
+    <string name="title_login">Entrar</string>
+    <string name="nav_no_permission">Voce nao tem permissao para este modulo.</string>
+</resources>
