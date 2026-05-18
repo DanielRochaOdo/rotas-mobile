@@ -412,6 +412,10 @@ class MainActivity : ComponentActivity() {
                     const route = normalizeRoute();
                     if (route === lastRoute) return;
                     lastRoute = route;
+                    document.documentElement.setAttribute('data-odontoart-route', route);
+                    if (document.body) {
+                      document.body.setAttribute('data-odontoart-route', route);
+                    }
                     if (window.AndroidBridge && window.AndroidBridge.onRouteChanged) {
                       window.AndroidBridge.onRouteChanged(route);
                     }
@@ -499,12 +503,28 @@ class MainActivity : ComponentActivity() {
                     --android-shell-bg: #F6F7FB;
                     --android-shell-text: #0F172A;
                     --android-shell-muted: rgba(15, 23, 42, 0.74);
+                    --android-shell-surface: rgba(255, 255, 255, 0.92);
+                    --android-shell-surface-strong: rgba(255, 255, 255, 0.97);
+                    --android-shell-surface-soft: rgba(239, 244, 247, 0.92);
+                    --android-shell-border: rgba(12, 111, 61, 0.18);
+                    --android-shell-border-strong: rgba(12, 111, 61, 0.28);
+                    --android-shell-accent: #0C6F3D;
+                    --android-shell-accent-soft: rgba(12, 111, 61, 0.12);
+                    --android-shell-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
                   }
                   html.dark,
                   body.dark {
                     --android-shell-bg: #0B1220;
-                    --android-shell-text: #E5E7EB;
-                    --android-shell-muted: rgba(229, 231, 235, 0.78);
+                    --android-shell-text: #F8FAFC;
+                    --android-shell-muted: rgba(226, 232, 240, 0.78);
+                    --android-shell-surface: rgba(15, 23, 42, 0.92);
+                    --android-shell-surface-strong: rgba(17, 24, 39, 0.98);
+                    --android-shell-surface-soft: rgba(30, 41, 59, 0.84);
+                    --android-shell-border: rgba(148, 163, 184, 0.22);
+                    --android-shell-border-strong: rgba(148, 163, 184, 0.34);
+                    --android-shell-accent: #47C98B;
+                    --android-shell-accent-soft: rgba(71, 201, 139, 0.18);
+                    --android-shell-shadow: 0 22px 48px rgba(2, 6, 23, 0.34);
                   }
                   html, body {
                     overscroll-behavior-y: contain !important;
@@ -518,29 +538,119 @@ class MainActivity : ComponentActivity() {
                     background: var(--android-shell-bg) !important;
                     color: var(--android-shell-text) !important;
                   }
-                  #root aside {
+                  #root > div > aside {
                     display: none !important;
                   }
                   #app-content-root {
                     margin: 0 !important;
-                    border: none !important;
+                    border: 1px solid var(--android-shell-border) !important;
                     border-radius: 0 !important;
-                    box-shadow: none !important;
-                    background: transparent !important;
-                  }
-                  html.dark #app-content-root {
+                    box-shadow: var(--android-shell-shadow) !important;
+                    background: var(--android-shell-surface-strong) !important;
                     color: var(--android-shell-text) !important;
                   }
+                  .text-ink,
+                  .text-ink\\/80,
+                  .text-ink\\/70,
+                  .text-ink\\/60,
+                  .text-ink\\/50 {
+                    color: var(--android-shell-text) !important;
+                  }
+                  .text-muted,
                   html.dark .text-ink\\/50,
                   html.dark .text-ink\\/60,
                   html.dark .text-ink\\/70,
                   html.dark .text-muted {
                     color: var(--android-shell-muted) !important;
                   }
+                  .bg-white,
+                  .bg-white\\/95,
+                  .bg-white\\/90,
+                  .bg-white\\/80,
+                  .bg-white\\/70,
+                  .bg-sand\\/60,
+                  .bg-sand\\/50,
+                  .bg-sand\\/40,
+                  .bg-sand\\/30,
+                  .bg-sand\\/20 {
+                    background: var(--android-shell-surface) !important;
+                    color: var(--android-shell-text) !important;
+                  }
+                  .border-sea\\/15,
                   html.dark .border-sea\\/15,
+                  .border-sea\\/20,
                   html.dark .border-sea\\/20,
+                  .border-sea\\/25,
                   html.dark .border-sea\\/25 {
-                    border-color: rgba(148, 163, 184, 0.35) !important;
+                    border-color: var(--android-shell-border) !important;
+                  }
+                  .border-sea\\/30,
+                  .border-sea\\/35,
+                  .border-sea\\/50 {
+                    border-color: var(--android-shell-border-strong) !important;
+                  }
+                  .bg-sea\\/10,
+                  .bg-sea\\/12,
+                  .bg-sea\\/15,
+                  .bg-sea\\/20 {
+                    background: var(--android-shell-accent-soft) !important;
+                  }
+                  .text-sea,
+                  .hover\\:text-sea:hover,
+                  .hover\\:text-seaLight:hover {
+                    color: var(--android-shell-accent) !important;
+                  }
+                  .hover\\:border-sea:hover,
+                  .hover\\:border-sea\\/25:hover,
+                  .hover\\:border-sea\\/35:hover,
+                  .hover\\:border-sea\\/50:hover {
+                    border-color: var(--android-shell-accent) !important;
+                  }
+                  input,
+                  select,
+                  textarea {
+                    background: var(--android-shell-surface-strong) !important;
+                    border-color: var(--android-shell-border) !important;
+                    color: var(--android-shell-text) !important;
+                    box-shadow: none !important;
+                  }
+                  input::placeholder,
+                  textarea::placeholder {
+                    color: var(--android-shell-muted) !important;
+                  }
+                  select option {
+                    background: #0F172A;
+                    color: #F8FAFC;
+                  }
+                  html:not(.dark) select option {
+                    background: #FFFFFF;
+                    color: #0F172A;
+                  }
+                  input:focus,
+                  select:focus,
+                  textarea:focus {
+                    border-color: var(--android-shell-accent) !important;
+                    outline: none !important;
+                  }
+                  [class*="shadow-card"],
+                  [class*="shadow-lg"],
+                  [class*="shadow-md"] {
+                    box-shadow: var(--android-shell-shadow) !important;
+                  }
+                  [data-odontoart-route^="/rotas"] aside button,
+                  [data-odontoart-route="/rotas"] aside button {
+                    background: var(--android-shell-surface) !important;
+                    border-color: var(--android-shell-border) !important;
+                    color: var(--android-shell-text) !important;
+                  }
+                  [data-odontoart-route^="/rotas"] aside button[class*="bg-sea"],
+                  [data-odontoart-route="/rotas"] aside button[class*="bg-sea"] {
+                    background: var(--android-shell-accent-soft) !important;
+                    border-color: var(--android-shell-accent) !important;
+                  }
+                  [data-odontoart-route^="/rotas"] section > div > div > h3,
+                  [data-odontoart-route="/rotas"] section > div > div > h3 {
+                    color: var(--android-shell-text) !important;
                   }
                   #root > div > div.flex.min-h-screen.w-full.flex-col {
                     padding: 0 !important;

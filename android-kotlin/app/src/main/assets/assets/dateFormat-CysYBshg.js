@@ -1,1 +1,0 @@
-const m=/^(\d{4})-(\d{2})-(\d{2})$/,a=(r,n="-")=>{if(!r)return n;const t=r.trim();if(!t)return n;const e=m.exec(t);if(e)return`${e[3]}/${e[2]}/${e[1]}`;const i=new Date(t);return Number.isNaN(i.getTime())?t:new Intl.DateTimeFormat("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"}).format(i)};export{a as f};

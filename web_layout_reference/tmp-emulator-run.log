@@ -1,0 +1,153 @@
+INFO         | Android emulator version 36.4.10.0 (build_id 15004761) (CL:N/A)
+INFO         | Graphics backend: gfxstream
+INFO         | Found systemPath C:\Users\daniel.rocha\AppData\Local\Android\Sdk\system-images\android-35\google_apis\x86_64\
+INFO         | IPv4 server found: 10.85.1.1
+INFO         | Ignore IPv6 address: 28b3:8136:8a01:0:f09d:8136:8a01:0
+INFO         | Ignore IPv6 address: 28b3:8136:8a01:0:f09d:8136:8a01:0
+INFO         | Ignore IPv6 address: 28b3:8136:8a01:0:f09d:8136:8a01:0
+INFO         | Guest GLES Driver: Auto (ext controls)
+INFO         | emuglConfig_init: vulkan_mode_selected:swiftshader gles_mode_selected:swiftshader
+INFO         | Checking system compatibility:
+INFO         |   Checking: hasCompatibleHypervisor
+INFO         |      Ok: Hypervisor compatibility to run avd: `VendaMais_API_35` are met
+INFO         |   Checking: hasSufficientSystem
+INFO         |      Ok: System requirements to run avd: `VendaMais_API_35` are met
+INFO         |   Checking: hasSufficientHwGpu
+INFO         |      Ok: Hardware GPU compatibility checks are not required
+INFO         |   Checking: hasSufficientDiskSpace
+INFO         |      Ok: Disk space requirements to run avd: `VendaMais_API_35` are met
+INFO         | Critical: Failed to load opengl32sw (Não foi possível encontrar o módulo especificado.) (:0, )
+INFO         | Warning: Software OpenGL failed. Falling back to system OpenGL. (:0, )
+INFO         | Storing crashdata in: C:\Users\daniel.rocha\AppData\Local\Temp\\AndroidEmulator\emu-crash-36.4.10.db, detection is enabled for process: 14324
+INFO         | Showing crashdialog to get consent.
+  module_list[0].crashpad_annotations["gfxstream_features"] (type = 1) = GlPipeChecksum, Vulkan, HasSharedSlotsHostMemoryAllocator, VulkanShaderFloat16Int8, GlAsyncSwap, GlDma, GlDirectMem, GlesDynamicVersion, RefCountPipe, HostComposition, VulkanNullOptionalStrings, YuvCache, VulkanIgnoredHandles, VulkanQueueSubmitWithCommands, HwcMultiConfigs, VulkanVirtualQueue, 
+  module_list[0].crashpad_annotations["ERRLOG"] (type = 1) = gpuChoiceBasedOnGpuOptions: Selected GPU option 'swiftshader_indirect' is not valid, switching to 'auto' mode.
+emuglConfig_get_vulkan_hardware_gpu_support_info: Failed to query physical devices count. Error: VK_ERROR_INITIALIZATION_FAILED [-3]
+
+No physical devices available.
+
+  module_list[0].crashpad_annotations["internal-msg"] (type = 1) = gpu found. vendor id 10de device id 0x104a
+emuglConfig_init: gpu_mode_requested: auto, no_window: 0
+emuglConfig_init: GPU emulation enabled using Vulkan:'host' GLES:'host' modes
+Deciding if GLDirectMem/Vulkan should be enabled. Selected GLES renderer: Host Selected Vulkan renderer: Host API level: 35 
+Enabling Vulkan
+Enabling GLDirectMem
+
+  module_list[0].crashpad_annotations["command_line"] (type = 1) = -avd VendaMais_API_35 
+INFO         | No consent for crashreport 586f88fa-b1f7-4367-864c-134760afa315, deleting.
+INFO         | Initializing gfxstream backend
+INFO         | android_startOpenglesRenderer: gpu info
+INFO         | GPU #1
+  Make: 10de
+  Model: NVIDIA GeForce GT 610
+  Device ID: 104a
+
+INFO         | initIcdPaths: ICD set to 'swiftshader', using Swiftshader ICD
+INFO         | Setting ICD filenames for the loader = C:\Users\daniel.rocha\AppData\Local\Android\Sdk\emulator\lib64\vulkan\vk_swiftshader_icd.json
+INFO         | SharedLibrary::open for [C:\Users\daniel.rocha\AppData\Local\Android\Sdk\emulator\qemu\windows-x86_64\lib64\vulkan\vulkan-1.dll]
+INFO         | SharedLibrary::open for [C:\Users\daniel.rocha\AppData\Local\Android\Sdk\emulator\lib64\vulkan\vulkan-1.dll]
+INFO         | Added library: C:\Users\daniel.rocha\AppData\Local\Android\Sdk\emulator\lib64\vulkan\vulkan-1.dll
+INFO         | Selecting Vulkan device: SwiftShader Device (LLVM 10.0.0), Version: 1.2.0
+INFO         | Initializing VkEmulation features:
+INFO         |     glInteropSupported: false
+INFO         |     useDeferredCommands: true
+INFO         |     createResourceWithRequirements: true
+INFO         |     useVulkanComposition: false
+INFO         |     useVulkanNativeSwapchain: false
+INFO         |     enable guestRenderDoc: false
+INFO         |     ASTC LDR emulation mode: Gpu
+INFO         |     enable ETC2 emulation: true
+INFO         |     enable Ycbcr emulation: false
+INFO         |     guestVulkanOnly: false
+INFO         |     useDedicatedAllocations: false
+INFO         | Graphics Adapter Vendor Google (Google Inc.)
+INFO         | Graphics Adapter Android Emulator OpenGL ES Translator (Google SwiftShader)
+INFO         | Graphics API Version OpenGL ES 3.0 (OpenGL ES 3.0 SwiftShader 4.0.0.1)
+INFO         | Graphics API Extensions GL_OES_EGL_sync GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_depth24 GL_OES_depth32 GL_OES_element_index_uint GL_OES_texture_float GL_OES_texture_float_linear GL_OES_compressed_paletted_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_depth_texture GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_packed_depth_stencil GL_OES_vertex_half_float GL_OES_standard_derivatives GL_OES_texture_npot GL_OES_rgb8_rgba8 GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_texture_format_BGRA8888 GL_APPLE_texture_format_BGRA8888 
+INFO         | Graphics Device Extensions N/A
+INFO         | Disabling sparse binding feature support
+INFO         | Sending adb public key [QAAAAPG1HQHvZEGok0NzNFmqpwRVGAgfTnEWd0q0Ng9SrowEL9aKP9iVcFs8FupvfkcjhRVGXYe3EuctJiGQw7Z1ZNRdw8IOTkVCWXtq90q0OX/Q5nsiOQbdIA0ux8fn6+l+ZWBa3TCCh4sjIr3x3nxZZQdfXZgmi5R9tLtzdVj6FUcebL+pMPULOICD0C5CFtd6xjG5s/EfmKccN8DhOwgGC7Gl9avpcN6buorlv1nDh6mbqbfn2WNRd5fBYXjyxod+Ei9CaQv7K7K7VR5agz/gW9+DlNQaosWPoMzTe2vyyd3sTjnFigY3y2cXxllEDuf1Eg+IpHv2sujvliUz1lHJmsvYNZCouNiz5zrvTmuOoC7vsCPhObvj+MuuJeoC8D5JQG22GAhwb/dWByrtBKqSMvwv3wUpbhA5n9tBDw2O/VuA6J2hcEmabKsfGuaHvp0S5q7mJBiNhP1DQfjPn884dXiGoGdDsCjx3fpn+EI6+jzMysZ67k4oQt/jZkJbe1ghITqC6mngDBbwOE45DzYnGx6vtX5NnGAQ4PLCYBmf8ePwnV62bi28uelwdU2aom41Ls6577vUwtseYXfb5MeJejG6/1te+QjDI7Rhwkni2/sKL8MPGtU+D2OqgQuvIQrmvZp3UYijInvahHOWQb6tJe55W+n2L0Nxrm2OnpDStAYCs1CWPwEAAQA= @unknown]
+INFO         | Userspace boot properties:
+INFO         |   androidboot.boot_devices=pci0000:00/0000:00:03.0 pci0000:00/0000:00:06.0
+INFO         |   androidboot.dalvik.vm.heapsize=576m
+INFO         |   androidboot.debug.hwui.renderer=skiagl
+INFO         |   androidboot.debug.sf.nobootanimation=1
+INFO         |   androidboot.hardware=ranchu
+INFO         |   androidboot.hardware.gltransport=pipe
+INFO         |   androidboot.hardware.vulkan=ranchu
+INFO         |   androidboot.logcat=*:V
+INFO         |   androidboot.opengles.version=196608
+INFO         |   androidboot.qemu=1
+INFO         |   androidboot.qemu.adb.pubkey=QAAAAPG1HQHvZEGok0NzNFmqpwRVGAgfTnEWd0q0Ng9SrowEL9aKP9iVcFs8FupvfkcjhRVGXYe3EuctJiGQw7Z1ZNRdw8IOTkVCWXtq90q0OX/Q5nsiOQbdIA0ux8fn6+l+ZWBa3TCCh4sjIr3x3nxZZQdfXZgmi5R9tLtzdVj6FUcebL+pMPULOICD0C5CFtd6xjG5s/EfmKccN8DhOwgGC7Gl9avpcN6buorlv1nDh6mbqbfn2WNRd5fBYXjyxod+Ei9CaQv7K7K7VR5agz/gW9+DlNQaosWPoMzTe2vyyd3sTjnFigY3y2cXxllEDuf1Eg+IpHv2sujvliUz1lHJmsvYNZCouNiz5zrvTmuOoC7vsCPhObvj+MuuJeoC8D5JQG22GAhwb/dWByrtBKqSMvwv3wUpbhA5n9tBDw2O/VuA6J2hcEmabKsfGuaHvp0S5q7mJBiNhP1DQfjPn884dXiGoGdDsCjx3fpn+EI6+jzMysZ67k4oQt/jZkJbe1ghITqC6mngDBbwOE45DzYnGx6vtX5NnGAQ4PLCYBmf8ePwnV62bi28uelwdU2aom41Ls6577vUwtseYXfb5MeJejG6/1te+QjDI7Rhwkni2/sKL8MPGtU+D2OqgQuvIQrmvZp3UYijInvahHOWQb6tJe55W+n2L0Nxrm2OnpDStAYCs1CWPwEAAQA= @unknown
+INFO         |   androidboot.qemu.avd_name=VendaMais_API_35
+INFO         |   androidboot.qemu.camera_hq_edge_processing=0
+INFO         |   androidboot.qemu.camera_protocol_ver=1
+INFO         |   androidboot.qemu.cpuvulkan.version=4202496
+INFO         |   androidboot.qemu.gltransport.drawFlushInterval=800
+INFO         |   androidboot.qemu.gltransport.name=pipe
+INFO         |   androidboot.qemu.hwcodec.avcdec=2
+INFO         |   androidboot.qemu.hwcodec.hevcdec=2
+INFO         |   androidboot.qemu.hwcodec.vpxdec=2
+INFO         |   androidboot.qemu.settings.system.screen_off_timeout=2147483647
+INFO         |   androidboot.qemu.skin=1080x2340
+INFO         |   androidboot.qemu.virtiowifi=1
+INFO         |   androidboot.qemu.vsync=60
+INFO         |   androidboot.serialno=EMULATOR36X4X10X0
+INFO         |   androidboot.vbmeta.digest=b3271ba499104f4631ae3723913d5c12574e01715fce5b82d60beed097ead264
+INFO         |   androidboot.vbmeta.hash_alg=sha256
+INFO         |   androidboot.vbmeta.size=6720
+INFO         |   androidboot.veritymode=enforcing
+WHPX on Windows 10.0.22631 detected.
+Windows Hypervisor Platform accelerator is operational
+INFO         | Monitoring duration of emulator setup.
+WARNING      | The emulator now requires a signed jwt token for gRPC access! Use the -grpc flag if you really want an open unprotected grpc port
+INFO         | Using security allow list from: C:\Users\daniel.rocha\AppData\Local\Android\Sdk\emulator\lib\emulator_access.json
+WARNING      | *** Basic token auth should only be used by android-studio ***
+INFO         | The active JSON Web Key Sets can be found here: C:\Users\daniel.rocha\AppData\Local\Temp\avd\running\14324\jwks\d52d2cc8-4a5c-434a-858d-3791395e3aa4\active.jwk
+INFO         | Scanning C:\Users\daniel.rocha\AppData\Local\Temp\avd\running\14324\jwks\d52d2cc8-4a5c-434a-858d-3791395e3aa4 for jwk keys.
+INFO         | Started GRPC server at 127.0.0.1:8554, security: Local, auth: +token
+INFO         | Advertising in: C:\Users\daniel.rocha\AppData\Local\Temp\avd\running\pid_14324.ini
+INFO         | Setting display: 0 configuration to: 1080x2340, dpi: 400x400 
+INFO         | setDisplayActiveConfig 0
+INFO         | Checking system compatibility:
+INFO         |   Checking: hasCompatibleHypervisor
+INFO         |      Ok: Hypervisor compatibility to run avd: `VendaMais_API_35` are met
+INFO         |   Checking: hasSufficientSystem
+INFO         |      Ok: System requirements to run avd: `VendaMais_API_35` are met
+INFO         |   Checking: hasSufficientHwGpu
+INFO         |      Ok: Hardware GPU compatibility checks are not required
+INFO         |   Checking: hasSufficientDiskSpace
+INFO         |      Ok: Disk space requirements to run avd: `VendaMais_API_35` are met
+INFO         | Activated packet streamer for bluetooth emulation
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_rgbcSensorValueWidget_valueChanged() (:0, )
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_posture_valueChanged(int) (:0, )
+INFO         | Warning: QObject::connect: Cannot queue arguments of type 'std::vector<android::emulation::control::SnapshotInfo>'
+(Make sure 'std::vector<android::emulation::control::SnapshotInfo>' is registered using qRegisterMetaType().) (:0, )
+INFO         | AVD supportsNativeGLES=1, supportsGuestAngle=1
+INFO         | Created extended window in 1.939446s
+INFO         | Boot completed in 85121 ms
+INFO         | Increasing screen off timeout, logcat buffer size to 2M.
+ERROR        | adb protocol fault (couldn't read status length)
+INFO         | IPv4 server found: 10.85.1.1
+INFO         | Ignore IPv6 address: 78a9:5417:8a01:0:4094:5417:8a01:0
+INFO         | Ignore IPv6 address: 78a9:5417:8a01:0:4094:5417:8a01:0
+INFO         | Ignore IPv6 address: 78a9:5417:8a01:0:4094:5417:8a01:0
+INFO         | IPv4 server found: 10.85.1.1
+INFO         | Ignore IPv6 address: 78a9:5417:8a01:0:4094:5417:8a01:0
+INFO         | Ignore IPv6 address: 78a9:5417:8a01:0:4094:5417:8a01:0
+INFO         | Ignore IPv6 address: 78a9:5417:8a01:0:4094:5417:8a01:0
+INFO         | IPv4 server found: 10.85.1.1
+INFO         | Ignore IPv6 address: 78a9:5417:8a01:0:4094:5417:8a01:0
+INFO         | Ignore IPv6 address: 78a9:5417:8a01:0:4094:5417:8a01:0
+INFO         | Ignore IPv6 address: 78a9:5417:8a01:0:4094:5417:8a01:0
+INFO         | Warning: Retrying to obtain clipboard. (:0, )
+INFO         | Warning: Retrying to obtain clipboard. (:0, )
+INFO         | Warning: Retrying to obtain clipboard. (:0, )
+INFO         | Warning: Retrying to obtain clipboard. (:0, )
+INFO         | Warning: Retrying to obtain clipboard. (:0, )
+INFO         | Warning: Retrying to obtain clipboard. (:0, )
+INFO         | Warning: Retrying to obtain clipboard. (:0, )
+INFO         | Wait for emulator (pid 14324) 20 seconds to shutdown gracefully before kill;you can set environment variable ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL(in seconds) to change the default value (20 seconds)
+
+WARNING      | Not saving state: RAM not mapped as shared
+INFO         | Saving snapshot 'default_boot' using 44 ms
