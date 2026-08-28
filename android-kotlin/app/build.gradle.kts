@@ -30,32 +30,27 @@ val rootEnvProperties = Properties().apply {
             ) {
                 value = value.substring(1, value.length - 1)
             }
-            if (key.isNotBlank()) {
-                setProperty(key, value)
-            }
+            if (key.isNotBlank()) setProperty(key, value)
         }
     }
 }
 
-fun readConfigValue(vararg keys: String): String {
-    keys.forEach { key ->
-        val envValue = System.getenv(key)
-        if (!envValue.isNullOrBlank()) return envValue
-        val propertyValue = localProperties.getProperty(key)
-        if (!propertyValue.isNullOrBlank()) return propertyValue
-        val envFileValue = rootEnvProperties.getProperty(key)
-        if (!envFileValue.isNullOrBlank()) return envFileValue
-    }
-    return ""
+fun readConfigValue(key: String): String {
+    val envValue = System.getenv(key)
+    if (!envValue.isNullOrBlank()) return envValue
+
+    val propertyValue = localProperties.getProperty(key)
+    if (!propertyValue.isNullOrBlank()) return propertyValue
+
+    return rootEnvProperties.getProperty(key).orEmpty()
 }
 
 fun escapeBuildConfig(value: String): String = value
     .replace("\\", "\\\\")
     .replace("\"", "\\\"")
 
-val supabaseUrl = readConfigValue("VITE_SUPABASE_URL", "SUPABASE_URL")
-val supabaseAnonKey = readConfigValue("VITE_SUPABASE_ANON_KEY", "SUPABASE_ANON_KEY")
-val webDistDir = rootProject.file("../dist")
+val supabaseUrl = readConfigValue("SUPABASE_URL")
+val supabaseAnonKey = readConfigValue("SUPABASE_ANON_KEY")
 val appVersionName = (project.findProperty("ODONTOART_APP_VERSION_NAME") as? String)
     ?.trim()
     ?.takeIf { it.isNotEmpty() }
@@ -82,9 +77,9 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("../keystore/release.jks")
-            storePassword = System.getenv("ODONTOART_KEYSTORE_PASSWORD") ?: "odontoart123"
+            storePassword = System.getenv("ODONTOART_KEYSTORE_PASSWORD")
             keyAlias = System.getenv("ODONTOART_KEY_ALIAS") ?: "odontoart"
-            keyPassword = System.getenv("ODONTOART_KEY_PASSWORD") ?: (System.getenv("ODONTOART_KEYSTORE_PASSWORD") ?: "odontoart123")
+            keyPassword = System.getenv("ODONTOART_KEY_PASSWORD")
         }
     }
 
@@ -94,7 +89,7 @@ android {
             isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
             signingConfig = signingConfigs.getByName("release")
         }
@@ -161,39 +156,20 @@ tasks.register("releasePlayReady") {
     dependsOn("assembleVersionedRelease", "bundleVersionedRelease")
 }
 
-tasks.register<Sync>("syncWebAssetsForAndroidRelease") {
-    group = "build setup"
-    description = "Sincroniza os assets web (dist) para o Android removendo arquivos antigos."
-    doFirst {
-        if (!webDistDir.exists()) {
-            throw GradleException("Diretorio ../dist nao encontrado. Execute `npm run build` na raiz antes do release Android.")
-        }
-    }
-    from(webDistDir)
-    into(layout.projectDirectory.dir("src/main/assets"))
-    includeEmptyDirs = false
-}
-
-tasks.named("preBuild") {
-    dependsOn("syncWebAssetsForAndroidRelease")
-}
-
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
-    implementation("com.google.android.material:material:1.12.0")
-    implementation("androidx.activity:activity-ktx:1.9.0")
     implementation("androidx.activity:activity-compose:1.9.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.3")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.3")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation(platform("androidx.compose:compose-bom:2024.06.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-    implementation("androidx.webkit:webkit:1.11.0")
-    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 }
