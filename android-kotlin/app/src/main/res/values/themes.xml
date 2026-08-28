@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.OdontoartRotas" parent="Theme.Material3.DayNight.NoActionBar" />
+    <!--
+        O tema XML serve apenas como tema de janela/Activity.
+        Toda a interface e o esquema claro/escuro do aplicativo são definidos
+        pelo RotasTheme em Jetpack Compose.
+
+        Usamos um tema da própria plataforma Android para não depender da
+        biblioteca Material Views apenas para inicializar a Activity.
+    -->
+    <style name="Theme.OdontoartRotas" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
 </resources>
