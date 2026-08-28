@@ -35,6 +35,14 @@ jobs:
       - name: Build native debug APK
         run: ./gradlew assembleDebug --stacktrace
 
+      - name: Upload direct debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: rotas-direct-debug
+          path: android-kotlin/app/build/outputs/apk/direct/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Ensure WebView is not used by Kotlin sources
         run: |
           if grep -R --line-number --include='*.kt' 'android.webkit.WebView\|WebViewAssetLoader\|JavascriptInterface' app/src/main/java; then
