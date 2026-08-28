@@ -49,6 +49,8 @@ fun escapeBuildConfig(value: String): String = value
     .replace("\\", "\\\\")
     .replace("\"", "\\\"")
 
+fun quotedBuildConfig(value: String): String = "\"${escapeBuildConfig(value)}\""
+
 val supabaseUrl = readConfigValue("SUPABASE_URL")
 val supabaseAnonKey = readConfigValue("SUPABASE_ANON_KEY")
 val appVersionName = (project.findProperty("ODONTOART_APP_VERSION_NAME") as? String)
@@ -60,6 +62,17 @@ val appVersionCode = (project.findProperty("ODONTOART_APP_VERSION_CODE") as? Str
     ?.toIntOrNull()
     ?: 1
 
+val defaultUpdateBaseUrl = "https://odontoart.com/rotas/updates"
+val updateBaseUrl = readConfigValue("ROTAS_UPDATE_BASE_URL")
+    .trim()
+    .ifBlank { defaultUpdateBaseUrl }
+    .removeSuffix("/")
+val updateMetadataUrl = readConfigValue("ROTAS_UPDATE_METADATA_URL")
+    .trim()
+    .ifBlank { "$updateBaseUrl/android-update.json" }
+val directApkFileName = "odontoart-rotas-direct-v${appVersionName}-b${appVersionCode}.apk"
+val directApkUrl = "$updateBaseUrl/$directApkFileName"
+
 android {
     namespace = "com.odontoart.rotas"
     compileSdk = 35
@@ -70,8 +83,10 @@ android {
         targetSdk = 35
         versionCode = appVersionCode
         versionName = appVersionName
-        buildConfigField("String", "SUPABASE_URL", "\"${escapeBuildConfig(supabaseUrl)}\"")
-        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${escapeBuildConfig(supabaseAnonKey)}\"")
+        buildConfigField("String", "SUPABASE_URL", quotedBuildConfig(supabaseUrl))
+        buildConfigField("String", "SUPABASE_ANON_KEY", quotedBuildConfig(supabaseAnonKey))
+        buildConfigField("String", "UPDATE_METADATA_URL", quotedBuildConfig(""))
+        buildConfigField("String", "UPDATE_APK_URL", quotedBuildConfig(""))
     }
 
     signingConfigs {
@@ -92,6 +107,13 @@ android {
                 "proguard-rules.pro",
             )
             signingConfig = signingConfigs.getByName("release")
+        }
+
+        create("direct") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+            buildConfigField("String", "UPDATE_METADATA_URL", quotedBuildConfig(updateMetadataUrl))
+            buildConfigField("String", "UPDATE_APK_URL", quotedBuildConfig(directApkUrl))
         }
 
         debug {
@@ -138,6 +160,74 @@ tasks.register<Copy>("exportVersionedReleaseBundle") {
     rename { "${releaseVersionedFileName}.aab" }
 }
 
+tasks.register<Copy>("exportDirectApk") {
+    dependsOn("assembleDirect")
+    from(layout.buildDirectory.dir("outputs/apk/direct")) {
+        include("*.apk")
+        exclude("*.idsig")
+    }
+    into(layout.buildDirectory.dir("outputs/direct-distribution"))
+    rename { directApkFileName }
+}
+
+tasks.register("generateDirectDistributionFiles") {
+    doLast {
+        val outputDir = layout.buildDirectory.dir("outputs/direct-distribution").get().asFile
+        outputDir.mkdirs()
+
+        val json = """
+            {
+              "versionCode": $appVersionCode,
+              "versionName": "$appVersionName",
+              "apkUrl": "$directApkUrl",
+              "notes": "Atualizacao da versao $appVersionName"
+            }
+        """.trimIndent() + System.lineSeparator()
+
+        val html = """
+            <!doctype html>
+            <html lang="pt-BR">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>Odontoart Rotas - Android</title>
+              <style>
+                :root { color-scheme: light; font-family: Arial, sans-serif; }
+                body { margin: 0; background: #f5f7f6; color: #183227; }
+                main { max-width: 680px; margin: 0 auto; padding: 48px 20px; }
+                .card { background: #fff; border-radius: 20px; padding: 28px; box-shadow: 0 12px 36px rgba(0,0,0,.08); }
+                h1 { margin-top: 0; color: #0c6f3d; }
+                .version { color: #587066; margin-bottom: 24px; }
+                .button { display: inline-block; background: #0c6f3d; color: white; text-decoration: none; padding: 14px 20px; border-radius: 12px; font-weight: 700; }
+                .hint { margin-top: 24px; font-size: 14px; color: #6c7d75; line-height: 1.5; }
+              </style>
+            </head>
+            <body>
+              <main>
+                <section class="card">
+                  <h1>Odontoart Rotas</h1>
+                  <p class="version">Versao $appVersionName · build $appVersionCode</p>
+                  <p>Baixe a versao Android de distribuicao interna.</p>
+                  <a class="button" href="$directApkUrl">Baixar APK</a>
+                  <p class="hint">Ao instalar pela primeira vez, o Android pode solicitar autorizacao para instalar aplicativos desta fonte. As proximas versoes podem ser detectadas pelo proprio aplicativo.</p>
+                </section>
+              </main>
+            </body>
+            </html>
+        """.trimIndent() + System.lineSeparator()
+
+        file("${outputDir.absolutePath}/android-update.json").writeText(json)
+        file("${outputDir.absolutePath}/android-update-v$appVersionName.json").writeText(json)
+        file("${outputDir.absolutePath}/index.html").writeText(html)
+    }
+}
+
+tasks.register("directDistributionReady") {
+    group = "build"
+    description = "Gera APK direct, android-update.json e pagina HTML para hospedagem publica."
+    dependsOn("exportDirectApk", "generateDirectDistributionFiles")
+}
+
 tasks.register("assembleVersionedRelease") {
     group = "build"
     description = "Gera o release APK e exporta uma copia com nome versionado."
@@ -152,7 +242,7 @@ tasks.register("bundleVersionedRelease") {
 
 tasks.register("releasePlayReady") {
     group = "build"
-    description = "Gera APK versionado (teste) e AAB versionado (Google Play)."
+    description = "Gera APK versionado (teste) e AAB versionado (Google Play), sem autoatualizacao direta."
     dependsOn("assembleVersionedRelease", "bundleVersionedRelease")
 }
 
