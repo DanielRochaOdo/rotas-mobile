@@ -35,11 +35,11 @@ jobs:
       - name: Build native debug APK
         run: ./gradlew assembleDebug --stacktrace
 
-      - name: Upload direct debug APK
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: rotas-direct-debug
-          path: android-kotlin/app/build/outputs/apk/direct/debug/*.apk
+          name: rotas-debug-apk
+          path: android-kotlin/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 7
 
