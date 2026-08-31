@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.view.WindowCompat
-import com.odontoart.rotas.ui.RotasRoot
+import com.odontoart.rotas.ui.ExactRotasRoot
 import com.odontoart.rotas.ui.theme.RotasTheme
 import com.odontoart.rotas.update.AppUpdateManager
 
@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             RotasTheme {
-                RotasRoot()
+                ExactRotasRoot()
             }
         }
 
