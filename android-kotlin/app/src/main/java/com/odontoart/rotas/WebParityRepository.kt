@@ -49,12 +49,7 @@ class WebParityRepository(
             }
         }
 
-        val enrichedById = if (orderedIds.isEmpty()) {
-            emptyMap()
-        } else {
-            fetchCompaniesByIds(session, orderedIds).associateBy { it.id }
-        }
-
+        val enrichedById = if (orderedIds.isEmpty()) emptyMap() else fetchCompaniesByIds(session, orderedIds).associateBy { it.id }
         val rows = firstPage.mapObjects { row ->
             val id = row.stringOrNull("id") ?: return@mapObjects null
             enrichedById[id] ?: ClienteListItem(
@@ -84,13 +79,7 @@ class WebParityRepository(
             .put("p_search_mode", mode)
             .put("p_situacao", situacao?.trim()?.takeIf { it.isNotBlank() } ?: JSONObject.NULL)
         val total = rpc(session, "get_empresas_count_v1", countPayload).trim().toLongOrNull() ?: rows.size.toLong()
-
-        CompanyPage(
-            rows = rows,
-            total = total,
-            page = safePage,
-            pageSize = safeSize,
-        )
+        CompanyPage(rows, total, safePage, safeSize)
     }
 
     suspend fun fetchCompanyById(session: UserSession, id: String): ClienteListItem? = withContext(Dispatchers.IO) {
@@ -155,7 +144,8 @@ class WebParityRepository(
         val select = listOf(
             "id", "codigo", "cnpj", "empresa", "nome_fantasia", "vidas_qtde", "pessoa", "contato", "grupo",
             "situacao", "categoria", "perfil_visita", "regra_visita_observacao", "endereco", "complemento",
-            "bairro", "cidade", "uf",
+            "bairro", "cidade", "uf", "cep", "corte", "venc", "valor", "reajuste_pct", "competencia",
+            "data_da_ultima_visita", "obs_comercial", "obs",
         ).joinToString(",")
         val inValue = "(${ids.joinToString(",")})"
         val url = restUrl("clientes", mapOf("select" to select, "id" to "in.$inValue"))
@@ -184,6 +174,15 @@ class WebParityRepository(
             bairro = row.stringOrNull("bairro"),
             cidade = row.stringOrNull("cidade"),
             uf = row.stringOrNull("uf"),
+            cep = row.stringOrNull("cep"),
+            corte = row.numberOrNull("corte"),
+            venc = row.numberOrNull("venc"),
+            valor = row.numberOrNull("valor"),
+            reajustePct = row.numberOrNull("reajuste_pct"),
+            competencia = row.stringOrNull("competencia"),
+            dataUltimaVisita = row.stringOrNull("data_da_ultima_visita"),
+            obsComercial = row.stringOrNull("obs_comercial"),
+            obs = row.stringOrNull("obs"),
         )
     }
 
@@ -240,14 +239,12 @@ class WebParityRepository(
 
     private fun JSONObject.optIntOrNull(key: String): Int? {
         if (!has(key) || isNull(key)) return null
-        return runCatching { getInt(key) }.getOrNull()
-            ?: optString(key).trim().toDoubleOrNull()?.toInt()
+        return runCatching { getInt(key) }.getOrNull() ?: optString(key).trim().toDoubleOrNull()?.toInt()
     }
 
     private fun JSONObject.numberOrNull(key: String): Double? {
         if (!has(key) || isNull(key)) return null
-        return runCatching { getDouble(key) }.getOrNull()
-            ?: optString(key).replace(",", ".").toDoubleOrNull()
+        return runCatching { getDouble(key) }.getOrNull() ?: optString(key).replace(",", ".").toDoubleOrNull()
     }
 
     private inline fun <T> JSONArray.mapObjects(transform: (JSONObject) -> T?): List<T> = buildList {
@@ -259,12 +256,7 @@ class WebParityRepository(
     }
 }
 
-data class CompanyPage(
-    val rows: List<ClienteListItem>,
-    val total: Long,
-    val page: Int,
-    val pageSize: Int,
-)
+data class CompanyPage(val rows: List<ClienteListItem>, val total: Long, val page: Int, val pageSize: Int)
 
 data class AgendaCompanyItem(
     val id: String,
@@ -292,9 +284,4 @@ data class AgendaCompanyItem(
     val visitGeneratedAt: String?,
 )
 
-data class AgendaCompanyPage(
-    val rows: List<AgendaCompanyItem>,
-    val total: Long,
-    val page: Int,
-    val pageSize: Int,
-)
+data class AgendaCompanyPage(val rows: List<AgendaCompanyItem>, val total: Long, val page: Int, val pageSize: Int)
