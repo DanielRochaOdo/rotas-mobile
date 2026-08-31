@@ -7,40 +7,60 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-private val OdontoartGreen = Color(0xFF0C6F3D)
-private val OdontoartGreenDark = Color(0xFF07552E)
-private val OdontoartMint = Color(0xFFDDF3E7)
-private val OdontoartCream = Color(0xFFF7F8F5)
-private val Ink = Color(0xFF18211B)
-private val DarkSurface = Color(0xFF121A15)
+val RotasSea = Color(0xFF00C573)
+val RotasSeaLight = Color(0xFF3ECF8E)
+val RotasInk = Color(0xFF10211A)
+val RotasMuted = Color(0xFF3F5A50)
+val RotasMutedSoft = Color(0xFF678277)
+val RotasCanvas = Color(0xFFF6FAF7)
+val RotasCanvasDeep = Color(0xFFF1F6F3)
+val RotasSurface = Color(0xFFFFFFFF)
+val RotasSand = Color(0xFFF1F6F3)
+val RotasMist = Color(0xFFD5E1DB)
+val RotasBorder = Color(0xFFC4D3CB)
 
 private val LightColors = lightColorScheme(
-    primary = OdontoartGreen,
+    primary = RotasSea,
     onPrimary = Color.White,
-    primaryContainer = OdontoartMint,
-    onPrimaryContainer = OdontoartGreenDark,
-    secondary = Color(0xFF426653),
-    secondaryContainer = Color(0xFFDCE9E1),
-    background = OdontoartCream,
-    onBackground = Ink,
-    surface = Color.White,
-    onSurface = Ink,
-    surfaceVariant = Color(0xFFEDF2EE),
-    outlineVariant = Color(0xFFD8E1DA),
+    primaryContainer = Color(0xFFDDF7EB),
+    onPrimaryContainer = Color(0xFF063C27),
+    secondary = RotasSeaLight,
+    onSecondary = RotasInk,
+    secondaryContainer = Color(0xFFE9F6EF),
+    onSecondaryContainer = RotasInk,
+    background = RotasCanvas,
+    onBackground = RotasInk,
+    surface = RotasSurface,
+    onSurface = RotasInk,
+    surfaceVariant = RotasSand,
+    onSurfaceVariant = RotasMuted,
+    outline = RotasBorder,
+    outlineVariant = RotasMist,
+    error = Color(0xFFB91C1C),
+    errorContainer = Color(0xFFFEE2E2),
+    onErrorContainer = Color(0xFF7F1D1D),
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFF7DDBA8),
-    onPrimary = Color(0xFF00391E),
-    primaryContainer = Color(0xFF07552E),
-    onPrimaryContainer = Color(0xFFA0F4C3),
-    secondary = Color(0xFFA8D0B8),
-    background = Color(0xFF0D1410),
-    onBackground = Color(0xFFE4EAE5),
-    surface = DarkSurface,
-    onSurface = Color(0xFFE4EAE5),
-    surfaceVariant = Color(0xFF253029),
-    outlineVariant = Color(0xFF3B4940),
+    primary = RotasSeaLight,
+    onPrimary = Color(0xFF062B1C),
+    primaryContainer = Color(0xFF123E2B),
+    onPrimaryContainer = Color(0xFFD9FBE9),
+    secondary = RotasSea,
+    onSecondary = Color(0xFF071A12),
+    secondaryContainer = Color(0xFF1F3129),
+    onSecondaryContainer = Color(0xFFFAFAFA),
+    background = Color(0xFF171717),
+    onBackground = Color(0xFFFAFAFA),
+    surface = Color(0xFF1A1A1A),
+    onSurface = Color(0xFFFAFAFA),
+    surfaceVariant = Color(0xFF1F1F1F),
+    onSurfaceVariant = Color(0xFFB4B4B4),
+    outline = Color(0xFF363636),
+    outlineVariant = Color(0xFF2E2E2E),
+    error = Color(0xFFF87171),
+    errorContainer = Color(0xFF451A1A),
+    onErrorContainer = Color(0xFFFECACA),
 )
 
 @Composable
