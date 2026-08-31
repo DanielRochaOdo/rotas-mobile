@@ -35,6 +35,17 @@ jobs:
       - name: Build native debug APK
         run: ./gradlew assembleDebug --stacktrace
 
+      - name: Ensure exact native root is active
+        run: |
+          if ! grep -q 'ExactRotasRoot' app/src/main/java/com/odontoart/rotas/MainActivity.kt; then
+            echo 'MainActivity is not using the exact-parity native root.'
+            exit 1
+          fi
+          if grep -q 'RotasRoot()' app/src/main/java/com/odontoart/rotas/MainActivity.kt; then
+            echo 'Legacy simplified RotasRoot is active in MainActivity.'
+            exit 1
+          fi
+
       - name: Ensure WebView is not used by Kotlin sources
         run: |
           if grep -R --line-number --include='*.kt' 'android.webkit.WebView\|WebViewAssetLoader\|JavascriptInterface' app/src/main/java; then
