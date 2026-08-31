@@ -109,9 +109,7 @@ fun ExactParityApp(
     var darkTheme by rememberSaveable { mutableStateOf(systemDarkTheme) }
     var destinationName by rememberSaveable { mutableStateOf(ExactDestination.DASHBOARD.name) }
     val destination = remember(destinationName) { ExactDestination.valueOf(destinationName) }
-    val available = remember(role) {
-        ExactDestination.entries.filter { item -> role != null && role in item.roles }
-    }
+    val available = remember(role) { ExactDestination.entries.filter { item -> role != null && role in item.roles } }
 
     LaunchedEffect(role) {
         if (role != null && destination !in available) destinationName = ExactDestination.DASHBOARD.name
@@ -119,7 +117,7 @@ fun ExactParityApp(
 
     LaunchedEffect(destination, session.userId) {
         when (destination) {
-            ExactDestination.DASHBOARD -> parityViewModel.loadDashboard(session, profile, mainState.routes.size)
+            ExactDestination.DASHBOARD -> Unit
             ExactDestination.ROUTES -> {
                 parityViewModel.loadAgendaCompanies(session)
                 mainViewModel.reloadRoutes()
@@ -148,15 +146,10 @@ fun ExactParityApp(
             drawerState = drawerState,
             drawerContent = {
                 ModalDrawerSheet(modifier = Modifier.width(304.dp)) {
-                    Column(
-                        modifier = Modifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 14.dp),
-                    ) {
+                    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 14.dp)) {
                         ExactDrawerBrand()
                         Spacer(Modifier.height(14.dp))
-                        ExactDrawerProfile(
-                            name = profile?.resolvedName ?: session.userEmail ?: "Perfil pendente",
-                            role = role?.label ?: "Perfil não identificado",
-                        )
+                        ExactDrawerProfile(profile?.resolvedName ?: session.userEmail ?: "Perfil pendente", role?.label ?: "Perfil não identificado")
                         Spacer(Modifier.height(12.dp))
                         HorizontalDivider()
                         Spacer(Modifier.height(8.dp))
@@ -164,10 +157,7 @@ fun ExactParityApp(
                             items(available, key = { it.name }) { item ->
                                 NavigationDrawerItem(
                                     selected = item == destination,
-                                    onClick = {
-                                        destinationName = item.name
-                                        scope.launch { drawerState.close() }
-                                    },
+                                    onClick = { destinationName = item.name; scope.launch { drawerState.close() } },
                                     icon = { Icon(item.icon, contentDescription = null) },
                                     label = { Text(item.title, fontWeight = if (item == destination) FontWeight.SemiBold else FontWeight.Normal) },
                                     shape = RoundedCornerShape(12.dp),
@@ -175,22 +165,13 @@ fun ExactParityApp(
                             }
                         }
                         HorizontalDivider()
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(if (darkTheme) Icons.Rounded.DarkMode else Icons.Rounded.LightMode, contentDescription = null)
                             Spacer(Modifier.width(10.dp))
                             Text("Tema escuro", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                             Switch(checked = darkTheme, onCheckedChange = { darkTheme = it })
                         }
-                        TextButton(
-                            onClick = {
-                                scope.launch { drawerState.close() }
-                                mainViewModel.signOut()
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
+                        TextButton(onClick = { scope.launch { drawerState.close() }; mainViewModel.signOut() }, modifier = Modifier.fillMaxWidth()) {
                             Icon(Icons.Rounded.Logout, contentDescription = null)
                             Spacer(Modifier.width(8.dp))
                             Text("Sair")
@@ -203,60 +184,27 @@ fun ExactParityApp(
                 containerColor = Color.Transparent,
                 topBar = {
                     TopAppBar(
-                        navigationIcon = {
-                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                Icon(Icons.Rounded.Menu, contentDescription = "Abrir menu")
-                            }
-                        },
+                        navigationIcon = { IconButton(onClick = { scope.launch { drawerState.open() } }) { Icon(Icons.Rounded.Menu, contentDescription = "Abrir menu") } },
                         title = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = RotasSea.copy(alpha = 0.15f),
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.Place,
-                                        contentDescription = null,
-                                        tint = RotasSea,
-                                        modifier = Modifier.padding(7.dp).size(17.dp),
-                                    )
+                                Surface(shape = CircleShape, color = RotasSea.copy(alpha = 0.15f)) {
+                                    Icon(Icons.Rounded.Place, contentDescription = null, tint = RotasSea, modifier = Modifier.padding(7.dp).size(17.dp))
                                 }
                                 Spacer(Modifier.width(9.dp))
                                 Column {
-                                    Text(
-                                        "ODONTOART",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontWeight = FontWeight.Medium,
-                                    )
-                                    Text(
-                                        "Agenda+",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    )
+                                    Text("ODONTOART", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
+                                    Text("Agenda+", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
                                 }
                             }
                         },
-                        actions = {
-                            IconButton(onClick = { destinationName = ExactDestination.NEWS.name }) {
-                                Icon(Icons.Rounded.Notifications, contentDescription = "Notificações")
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
-                        ),
+                        actions = { IconButton(onClick = { destinationName = ExactDestination.NEWS.name }) { Icon(Icons.Rounded.Notifications, contentDescription = "Notificações") } },
+                        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)),
                     )
                 },
             ) { padding ->
-                Box(
-                    modifier = Modifier.fillMaxSize().background(pageBackground).padding(padding),
-                ) {
+                Box(modifier = Modifier.fillMaxSize().background(pageBackground).padding(padding)) {
                     when (destination) {
-                        ExactDestination.DASHBOARD -> ExactDashboardScreen(
-                            state = parityState,
-                            onRefresh = { parityViewModel.loadDashboard(session, profile, mainState.routes.size) },
-                        )
+                        ExactDestination.DASHBOARD -> StrategicDashboardScreen(session = session, role = role)
                         ExactDestination.ROUTES -> ExactRoutesScreen(
                             state = parityState,
                             mainState = mainState,
@@ -286,24 +234,14 @@ fun ExactParityApp(
                             onRefresh = { parityViewModel.loadAcceptance(session, profile, java.time.LocalDate.now().toString()) },
                             onRegister = { date, vidas -> parityViewModel.registerAcceptance(session, profile, date, vidas, java.time.LocalDate.now().toString()) },
                         )
-                        ExactDestination.QUEUE -> QueueParityScreen(
-                            state = parityState,
-                            onRefresh = { parityViewModel.loadQueue(session) },
-                            onAction = { id, action, waiting, block, reason -> parityViewModel.applyQueueAction(session, id, action, waiting, block, reason) },
-                        )
+                        ExactDestination.QUEUE -> QueueParityScreen(state = parityState, onRefresh = { parityViewModel.loadQueue(session) }, onAction = { id, action, waiting, block, reason -> parityViewModel.applyQueueAction(session, id, action, waiting, block, reason) })
                         ExactDestination.KPI -> KpiParityScreen(state = parityState, onPeriod = { parityViewModel.loadKpi(session, it) })
                         ExactDestination.LOGS -> LogsParityScreen(state = parityState, onFilter = { action, table -> parityViewModel.loadLogs(session, action, table) })
                         ExactDestination.NEWS -> NewsParityScreen(state = parityState, onRefresh = { parityViewModel.loadNews(session, profile) }, onMarkRead = { parityViewModel.markNewsRead(session, profile, it) })
                         ExactDestination.SETTINGS -> SettingsParityScreen(state = parityState, onRefresh = { parityViewModel.loadManagedProfiles(session) }, onSetInactive = { id, inactive -> parityViewModel.setProfileInactive(session, id, inactive) })
                     }
-
-                    if (parityState.isLoading) {
-                        Surface(
-                            modifier = Modifier.align(Alignment.TopCenter).padding(top = 10.dp),
-                            shape = RoundedCornerShape(999.dp),
-                            color = MaterialTheme.colorScheme.surface,
-                            shadowElevation = 3.dp,
-                        ) {
+                    if (destination != ExactDestination.DASHBOARD && parityState.isLoading) {
+                        Surface(modifier = Modifier.align(Alignment.TopCenter).padding(top = 10.dp), shape = RoundedCornerShape(999.dp), shadowElevation = 3.dp) {
                             Text("Atualizando...", modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp), style = MaterialTheme.typography.labelMedium)
                         }
                     }
