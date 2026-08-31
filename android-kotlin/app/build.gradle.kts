@@ -55,8 +55,8 @@ fun escapeBuildConfig(value: String): String = value
 
 fun quotedBuildConfig(value: String): String = "\"${escapeBuildConfig(value)}\""
 
-// Client-safe configuration only. Never embed service-role keys, CRON_SECRET or
-// dashboard synchronization secrets in the APK.
+// Configuracao cliente. Service-role, CRON_SECRET e segredos de sincronizacao
+// nunca sao incluidos no APK.
 val supabaseUrl = readConfigValue("VITE_SUPABASE_URL", "SUPABASE_URL", "PRIMARY_SUPABASE_URL")
 val supabaseAnonKey = readConfigValue("VITE_SUPABASE_ANON_KEY", "SUPABASE_ANON_KEY")
 val dashboardUrl = readConfigValue("VITE_DASHBOARD_URL", "DASHBOARD_URL")
@@ -68,6 +68,19 @@ val dashboardAnonKey = readConfigValue("VITE_DASHBOARD_ANON_KEY", "DASHBOARD_ANO
 val cepApiUrl = readConfigValue("VITE_CEP_API_URL", "CEP_API_URL")
 val nominatimProxyUrl = readConfigValue("VITE_NOMINATIM_PROXY_URL", "NOMINATIM_PROXY_URL")
 val odontoartProxyUrl = readConfigValue("VITE_ODONTOART_PROXY_URL", "ODONTOART_PROXY_URL")
+val odontoartClientToken = readConfigValue("VITE_ODONTOART_TOKEN")
+
+val configuredWebRepoPath = readConfigValue("ODONTOART_WEB_REPO_PATH").trim()
+val webReferenceCandidates = buildList {
+    if (configuredWebRepoPath.isNotBlank()) add(file(configuredWebRepoPath))
+    add(rootProject.file("../web-reference"))
+    add(rootProject.file("../../Odontoart-rotas"))
+}
+val webReferenceDir = webReferenceCandidates.firstOrNull { it.resolve("package.json").isFile }
+    ?: webReferenceCandidates.first()
+val webRuntimeDir = layout.buildDirectory.dir("web-runtime")
+val generatedWebEnvFile = layout.buildDirectory.file("generated/web-runtime/.env.local")
+val npmExecutable = if (System.getProperty("os.name").lowercase().contains("windows")) "npm.cmd" else "npm"
 
 val appVersionName = (project.findProperty("ODONTOART_APP_VERSION_NAME") as? String)
     ?.trim()
@@ -160,6 +173,89 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"
     }
+}
+
+val generateWebClientEnv = tasks.register("generateWebClientEnv") {
+    outputs.file(generatedWebEnvFile)
+    doLast {
+        val target = generatedWebEnvFile.get().asFile
+        target.parentFile.mkdirs()
+        val values = linkedMapOf(
+            "VITE_SUPABASE_URL" to supabaseUrl,
+            "VITE_SUPABASE_ANON_KEY" to supabaseAnonKey,
+            "VITE_CEP_API_URL" to cepApiUrl,
+            "VITE_NOMINATIM_PROXY_URL" to nominatimProxyUrl,
+            "VITE_ODONTOART_PROXY_URL" to odontoartProxyUrl,
+            "VITE_ODONTOART_TOKEN" to odontoartClientToken,
+            "VITE_DASHBOARD_URL" to dashboardUrl,
+            "VITE_DASHBOARD_ANON_KEY" to dashboardAnonKey,
+        )
+        target.writeText(
+            values.entries.joinToString(System.lineSeparator()) { (key, value) ->
+                "$key=${value.replace("\r", "").replace("\n", "")}" 
+            } + System.lineSeparator(),
+        )
+    }
+}
+
+val prepareWebRuntimeSource = tasks.register<Sync>("prepareWebRuntimeSource") {
+    group = "build setup"
+    description = "Copia o Odontoart-rotas para uma area temporaria sem alterar o repositorio web."
+    dependsOn(generateWebClientEnv)
+    doFirst {
+        if (!webReferenceDir.resolve("package.json").isFile) {
+            throw GradleException(
+                "Repositorio web Odontoart-rotas nao encontrado. " +
+                    "Mantenha-o ao lado de rotas-mobile ou configure ODONTOART_WEB_REPO_PATH.",
+            )
+        }
+    }
+    from(webReferenceDir) {
+        include("package.json")
+        include("package-lock.json")
+        include("index.html")
+        include("vite.config.*")
+        include("tsconfig*.json")
+        include("postcss.config.*")
+        include("tailwind.config.*")
+        include("src/**")
+        include("public/**")
+    }
+    from(generatedWebEnvFile) {
+        rename { ".env.local" }
+    }
+    into(webRuntimeDir)
+    includeEmptyDirs = false
+}
+
+val installWebRuntimeDependencies = tasks.register<Exec>("installWebRuntimeDependencies") {
+    group = "build setup"
+    description = "Instala as dependencias da copia temporaria do Odontoart-rotas."
+    dependsOn(prepareWebRuntimeSource)
+    workingDir(webRuntimeDir.get().asFile)
+    commandLine(npmExecutable, "ci", "--no-audit", "--no-fund")
+}
+
+val buildWebRuntime = tasks.register<Exec>("buildWebRuntime") {
+    group = "build"
+    description = "Compila o mesmo React/CSS/TypeScript do Odontoart-rotas para o APK."
+    dependsOn(installWebRuntimeDependencies)
+    workingDir(webRuntimeDir.get().asFile)
+    environment("NODE_OPTIONS", "--max-old-space-size=4096")
+    commandLine(npmExecutable, "run", "build")
+}
+
+val syncWebRuntimeAssets = tasks.register<Sync>("syncWebRuntimeAssets") {
+    group = "build setup"
+    description = "Empacota o dist do Odontoart-rotas como assets do Android."
+    dependsOn(buildWebRuntime)
+    from(webRuntimeDir.map { it.dir("dist") })
+    into(layout.projectDirectory.dir("src/main/assets"))
+    includeEmptyDirs = false
+}
+
+tasks.named("preBuild") {
+    dependsOn(syncWebRuntimeAssets)
 }
 
 val releaseVersionedFileName = run {
@@ -283,4 +379,5 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation("androidx.webkit:webkit:1.11.0")
 }
