@@ -13,6 +13,7 @@ class ParityViewModel(
     private val api: SupabaseApi = SupabaseApi(),
     private val dashboardRepository: DashboardRepository = DashboardRepository(),
     private val webRepository: WebParityRepository = WebParityRepository(),
+    private val visitsRepository: VisitsWebRepository = VisitsWebRepository(),
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ParityUiState())
     val uiState: StateFlow<ParityUiState> = _uiState.asStateFlow()
@@ -52,7 +53,9 @@ class ParityViewModel(
 
     fun completeVisit(session: UserSession, profile: UserProfile?, visitId: String, vidas: Int) = launchLoad {
         require(vidas >= 0) { "Quantidade de vidas deve ser um número inteiro válido." }
-        api.completeVisit(session, visitId, vidas)
+        val visit = _uiState.value.visits.firstOrNull { it.id == visitId }
+            ?: error("Visita não encontrada na agenda atual.")
+        visitsRepository.completeVisit(session, visit, vidas)
         _uiState.update { it.copy(visits = api.fetchVisits(session, profile?.userRole, 1000)) }
     }
 
@@ -64,7 +67,7 @@ class ParityViewModel(
         observation: String?,
     ) = launchLoad {
         require(reason.isNotBlank()) { "Informe o motivo da visita não realizada." }
-        api.registerNoVisit(session, visitId, reason.trim(), observation?.trim())
+        visitsRepository.registerNoVisit(session, visitId, reason.trim(), observation?.trim())
         _uiState.update { it.copy(visits = api.fetchVisits(session, profile?.userRole, 1000)) }
     }
 
