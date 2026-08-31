@@ -1,229 +1,150 @@
-# Migração do Rotas Mobile para Android nativo
+# Rotas Mobile — arquitetura de paridade com o web
 
 ## 1. Objetivo
 
-Transformar o `rotas-mobile` em um aplicativo Android genuinamente nativo, mantendo o repositório `DanielRochaOdo/Odontoart-rotas` como referência funcional, visual e de regras de negócio, sem alterar o repositório web e sem embarcar sua aplicação React dentro do APK.
+O `rotas-mobile` deve entregar no Android o mesmo produto existente em `DanielRochaOdo/Odontoart-rotas`, com paridade visual e funcional.
 
-## 2. Regra principal
+O repositório web é a **fonte de verdade** para:
 
-### O web é fonte de referência, não fonte de UI para o APK
-
-Pode ser usado para entender:
-
+- layout e responsividade;
+- módulos e navegação;
+- permissões;
+- filtros;
+- formulários e modais;
 - regras de negócio;
-- permissões por perfil;
-- campos e validações;
-- comportamento dos fluxos;
-- dados consumidos do Supabase/RPCs/APIs;
-- identidade e hierarquia visual do produto.
+- consultas Supabase/RPC;
+- Edge Functions e integrações;
+- estados de loading/erro/vazio;
+- comportamento de Agenda/Visitas/Rotas.
 
-Não pode ser usado no Android por meio de:
+O repositório `Odontoart-rotas` permanece somente leitura durante o build Android.
 
-- WebView;
-- cópia de `dist`;
-- JavaScript bridge;
-- injeção de CSS;
-- componentes React;
-- TypeScript executado ou empacotado no aplicativo;
-- HashRouter ou qualquer navegação web dentro do APK.
+## 2. Decisão arquitetural
 
-## 3. Arquitetura alvo
+As tentativas de reimplementar o sistema em Jetpack Compose geraram divergências visuais, perda de funcionalidades e consultas incompatíveis com o backend.
+
+Para garantir paridade, o Android passa a usar o mesmo bundle React/CSS/TypeScript do web dentro de um `WebView` hospedado pelo Kotlin.
+
+O Kotlin continua responsável por recursos específicos da plataforma:
+
+- Activity e ciclo de vida;
+- empacotamento/assinatura do APK;
+- autoatualização;
+- intents para mapas e aplicativos externos;
+- seletor de arquivos;
+- botão Voltar;
+- armazenamento/cache do WebView;
+- distribuição Google Play ou canal direto.
+
+## 3. Fonte web sem alteração
+
+O Gradle localiza `Odontoart-rotas`, copia os arquivos necessários para uma pasta temporária em `build/`, gera somente variáveis públicas `VITE_*`, executa o build Vite e empacota o `dist` no APK.
+
+Nenhum arquivo do repositório web é sobrescrito.
+
+Estrutura recomendada:
 
 ```text
-app/src/main/java/com/odontoart/rotas/
-  core/
-    designsystem/
-    network/
-    session/
-    util/
-  data/
-    auth/
-    routes/
-    visits/
-    clients/
-    queue/
-    kpi/
-  domain/
-    model/
-    repository/
-    usecase/
-  feature/
-    login/
-    dashboard/
-    agenda/
-    visits/
-    clients/
-    acceptance/
-    queue/
-    kpi/
-    news/
-    settings/
-    logs/
-  navigation/
-  ui/theme/
+GitHub/
+├── rotas-mobile/
+└── Odontoart-rotas/
 ```
 
-### Camadas
+Caminho alternativo:
 
-**UI / feature**
-- Jetpack Compose e Material 3.
-- Cada funcionalidade possui sua tela e ViewModel.
-- Estado exposto por `StateFlow`.
+```powershell
+$env:ODONTOART_WEB_REPO_PATH="C:\caminho\Odontoart-rotas"
+```
 
-**Domain**
-- Modelos e regras independentes da interface.
-- Regras do web devem ser traduzidas para casos de uso Kotlin quando não estiverem centralizadas no banco/API.
+## 4. Segurança
 
-**Data**
-- Repositórios responsáveis por Auth, Supabase REST, RPCs e APIs externas.
-- A tela não conhece URLs, SQL, JSON ou detalhes de autenticação.
+Podem ser incluídas no bundle apenas configurações de cliente já expostas pelo web, como:
 
-**Core**
-- sessão, cliente HTTP, design system, datas, erros e componentes comuns.
+```text
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+VITE_DASHBOARD_URL
+VITE_DASHBOARD_ANON_KEY
+VITE_CEP_API_URL
+VITE_NOMINATIM_PROXY_URL
+VITE_ODONTOART_PROXY_URL
+VITE_ODONTOART_TOKEN
+```
 
-## 4. Direção de UX
+Nunca devem ser empacotados:
 
-O Android deve preservar a identidade Odontoart, mas não copiar a composição desktop.
+```text
+SUPABASE_SERVICE_ROLE_KEY
+DASHBOARD_SERVICE_ROLE_KEY
+CRON_SECRET
+DASH_SYNC_MODE
+DASH_SYNC_BATCH_SIZE
+DASH_SYNC_SAFETY_LAG_SECONDS
+DASH_SYNC_LOCK_TTL_SECONDS
+DASH_SYNC_TABLES
+```
 
-### Padrões principais
+## 5. Regra de paridade
 
-- `NavigationBar` para áreas de uso frequente;
-- `TopAppBar` contextual;
-- `LazyColumn`/`LazyRow` para listas;
-- cards em lugar de tabelas densas;
-- `FloatingActionButton` para ação primária;
-- bottom sheets/dialogs para ações rápidas;
-- filtros em chips;
-- busca com campo nativo;
-- feedback de carregamento e erro dentro da tela;
-- Intent nativo para mapas, telefone e links externos;
-- suporte a tema claro/escuro do Android;
-- alvos de toque adequados para uso em campo.
+Não deve existir uma segunda implementação manual da interface em Compose competindo com o web.
 
-### Identidade
+Para cada revisão utilizada no build, o APK deve reproduzir os mesmos:
 
-- verde Odontoart como cor primária;
-- superfícies claras e hierarquia Material 3;
-- tipografia do sistema;
-- menos elementos simultâneos que no desktop;
-- informação priorizada por contexto de uso.
+- módulos;
+- menus;
+- permissões;
+- filtros;
+- dados;
+- modais;
+- botões e ações;
+- validações;
+- regras de negócio;
+- identidade visual;
+- comportamento responsivo.
 
-## 5. Paridade funcional
+## 6. Agenda e Visitas
 
-Rotas identificadas no web atual:
+Agenda/Visitas são consideradas áreas críticas. O Android deve usar o mesmo `Visitas.tsx`, APIs e helpers do web.
 
-| Módulo web | Rota web | Android nativo | Situação |
-|---|---|---|---|
-| Login | `/login` | Login Compose | Base implementada |
-| Dashboard | `/` e `/dashboard` | Início | Base implementada |
-| Agenda / Rotas | `/agenda` | Agenda | Base implementada para rotas/paradas |
-| Visitas | `/visitas` | Visitas | Portar regras e fluxo |
-| Aceite Digital | `/aceite-digital` | Aceite | Portar |
-| Clientes | `/clientes` | Clientes | Portar |
-| Fila | `/fila` | Fila | Portar |
-| KPI | `/kpi` | Indicadores | Portar e redesenhar para mobile |
-| Novidades | `/novidades` | Novidades | Portar |
-| Configurações | `/configuracoes` | Configurações | Portar |
-| Logs | `/logs` | Logs | Portar apenas para perfis autorizados |
+Exemplo de divergência que motivou a mudança: a implementação Kotlin consultava `visits.route_stop_id`, porém o web deriva a parada consultando `route_stops` por `route_id + cliente_id`. A reimplementação manual criou um contrato inexistente no banco.
 
-A rota web `/rotas` atualmente redireciona para `/agenda`; no Android deve existir apenas o conceito nativo de Agenda/Rotas, sem reproduzir redirecionamento web.
+Com o runtime compartilhado, esse tipo de divergência deixa de existir porque o mesmo código de consulta é executado no web e no APK.
 
-## 6. Regras que precisam ser revisadas durante a migração
+## 7. Build
 
-O web recebeu evoluções depois da última atualização do mobile, incluindo:
+APK de teste:
 
-- melhorias de UX;
-- sistema de notificações;
-- KPI;
-- regra de visita;
-- exibição da regra de visita no card da empresa;
-- modo ação;
-- mudanças em cadastro/estado de usuários e empresas;
-- campo de observação e redesign de telas.
+```powershell
+cd android-kotlin
+.\gradlew.bat clean assembleDebug
+```
 
-Cada item deve ser rastreado até a implementação Android correspondente.
+O Gradle executa automaticamente a preparação e compilação do web antes de compilar o APK.
 
-## 7. Estratégia de migração
+Saída:
 
-### Fase 1 — romper dependência web
+```text
+android-kotlin\app\build\outputs\apk\debug\app-debug.apk
+```
 
-- remover WebView do fluxo do app;
-- remover bridge JavaScript e injeção de CSS;
-- remover sincronização de `dist` no Gradle;
-- remover dependências WebKit usadas apenas pelo shell web;
-- criar tema Material 3;
-- criar shell Compose;
-- manter autenticação e acesso Supabase em Kotlin.
+Canal direto:
 
-### Fase 2 — arquitetura por feature
+```powershell
+.\gradlew.bat directDistributionReady
+```
 
-- separar `MainViewModel` em ViewModels por feature;
-- separar `SupabaseApi` em repositórios por domínio;
-- persistir sessão com armazenamento Android apropriado;
-- padronizar tratamento de erros;
-- criar navegação tipada do app.
+## 8. Critério de aceite
 
-### Fase 3 — operação de campo
+Uma versão Android somente deve ser considerada pronta quando:
 
-Prioridade:
+1. o build web usado no APK vem diretamente do `Odontoart-rotas`;
+2. o APK abre e autentica normalmente;
+3. Agenda, Visitas e Rotas exibem os mesmos dados e regras do web;
+4. filtros, modais e ações principais funcionam no aparelho;
+5. links externos são encaminhados para intents Android quando aplicável;
+6. nenhuma credencial de servidor foi incorporada ao APK;
+7. o CI compila tanto o web quanto o Android e valida os assets gerados.
 
-1. Agenda/Rotas completa;
-2. Visitas;
-3. Clientes;
-4. notificações;
-5. Aceite Digital;
-6. Fila;
-7. KPI;
-8. demais telas administrativas.
+## 9. Evolução futura
 
-### Fase 4 — paridade e otimização
-
-- comparar tela a tela e regra a regra com o web;
-- testes de permissões por perfil;
-- testes offline/de rede instável onde fizer sentido;
-- performance de listas grandes;
-- acessibilidade;
-- validação em aparelhos Android reais.
-
-## 8. Política para evitar nova divergência
-
-Toda alteração relevante no `Odontoart-rotas` deve responder no PR/ticket:
-
-> Esta mudança afeta o aplicativo Android?
-
-Se sim, deve existir uma das opções:
-
-1. regra compartilhada no banco/RPC/API e consumida pelos dois clientes; ou
-2. tarefa Android vinculada para implementar a mesma regra em Kotlin.
-
-Mudanças de UI desktop não precisam ser copiadas literalmente. O Android deve manter equivalência de objetivo e regra, usando padrões mobile.
-
-## 9. Critérios de aceite do Android nativo
-
-Uma funcionalidade só é considerada nativa quando:
-
-- a tela é renderizada por Compose;
-- não existe WebView no fluxo;
-- não depende de HTML/CSS/JS/TS para funcionar;
-- dados são acessados pela camada Kotlin;
-- navegação ocorre pelo aplicativo Android;
-- permissões e validações equivalem ao comportamento esperado do web;
-- a experiência é utilizável em tela de celular sem reproduzir layout desktop.
-
-## 10. Estado desta branch
-
-Branch: `refactor/android-native-kotlin`
-
-Nesta primeira etapa já foram iniciados:
-
-- remoção da dependência de `dist` no build;
-- remoção das dependências WebKit do shell;
-- substituição da `MainActivity` por Compose;
-- tema Material 3 próprio;
-- login nativo;
-- dashboard nativo inicial;
-- agenda nativa inicial com seleção de rota e paradas;
-- abertura de endereço via Intent de mapa;
-- navegação inferior Android.
-
-Os demais módulos permanecem fora do escopo da Fase 1 e devem ser portados progressivamente, sem reintroduzir conteúdo web no APK.
+Se algum recurso necessitar comportamento específico do dispositivo, ele pode receber uma integração Kotlin/JavaScript dedicada. A interface e regra central, porém, permanecem no código compartilhado do web para evitar nova divergência.
