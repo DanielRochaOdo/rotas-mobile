@@ -41,7 +41,7 @@ jobs:
             echo 'MainActivity is not using the exact-parity native root.'
             exit 1
           fi
-          if grep -q 'RotasRoot()' app/src/main/java/com/odontoart/rotas/MainActivity.kt; then
+          if grep -Eq '^[[:space:]]*RotasRoot\(\)' app/src/main/java/com/odontoart/rotas/MainActivity.kt; then
             echo 'Legacy simplified RotasRoot is active in MainActivity.'
             exit 1
           fi
