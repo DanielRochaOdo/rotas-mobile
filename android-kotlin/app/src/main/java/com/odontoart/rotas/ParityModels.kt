@@ -52,6 +52,15 @@ data class ClienteListItem(
     val bairro: String?,
     val cidade: String?,
     val uf: String?,
+    val cep: String? = null,
+    val corte: Double? = null,
+    val venc: Double? = null,
+    val valor: Double? = null,
+    val reajustePct: Double? = null,
+    val competencia: String? = null,
+    val dataUltimaVisita: String? = null,
+    val obsComercial: String? = null,
+    val obs: String? = null,
 )
 
 data class DigitalAcceptanceItem(
