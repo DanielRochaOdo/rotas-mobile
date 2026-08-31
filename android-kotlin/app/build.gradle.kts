@@ -35,14 +35,18 @@ val rootEnvProperties = Properties().apply {
     }
 }
 
-fun readConfigValue(key: String): String {
-    val envValue = System.getenv(key)
-    if (!envValue.isNullOrBlank()) return envValue
+fun readConfigValue(vararg keys: String): String {
+    keys.forEach { key ->
+        val envValue = System.getenv(key)
+        if (!envValue.isNullOrBlank()) return envValue
 
-    val propertyValue = localProperties.getProperty(key)
-    if (!propertyValue.isNullOrBlank()) return propertyValue
+        val propertyValue = localProperties.getProperty(key)
+        if (!propertyValue.isNullOrBlank()) return propertyValue
 
-    return rootEnvProperties.getProperty(key).orEmpty()
+        val envFileValue = rootEnvProperties.getProperty(key)
+        if (!envFileValue.isNullOrBlank()) return envFileValue
+    }
+    return ""
 }
 
 fun escapeBuildConfig(value: String): String = value
@@ -51,8 +55,8 @@ fun escapeBuildConfig(value: String): String = value
 
 fun quotedBuildConfig(value: String): String = "\"${escapeBuildConfig(value)}\""
 
-val supabaseUrl = readConfigValue("SUPABASE_URL")
-val supabaseAnonKey = readConfigValue("SUPABASE_ANON_KEY")
+val supabaseUrl = readConfigValue("SUPABASE_URL", "VITE_SUPABASE_URL")
+val supabaseAnonKey = readConfigValue("SUPABASE_ANON_KEY", "VITE_SUPABASE_ANON_KEY")
 val appVersionName = (project.findProperty("ODONTOART_APP_VERSION_NAME") as? String)
     ?.trim()
     ?.takeIf { it.isNotEmpty() }
