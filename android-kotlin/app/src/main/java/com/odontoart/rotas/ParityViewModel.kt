@@ -12,6 +12,8 @@ import org.json.JSONObject
 class ParityViewModel(
     private val api: SupabaseApi = SupabaseApi(),
     private val dashboardRepository: DashboardRepository = DashboardRepository(),
+    private val webRepository: WebParityRepository = WebParityRepository(),
+    private val visitsRepository: VisitsWebRepository = VisitsWebRepository(),
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ParityUiState())
     val uiState: StateFlow<ParityUiState> = _uiState.asStateFlow()
@@ -23,13 +25,37 @@ class ParityViewModel(
         _uiState.update { it.copy(dashboard = summary) }
     }
 
+    fun loadAgendaCompanies(
+        session: UserSession,
+        search: String = _uiState.value.agendaSearch,
+        page: Int = 1,
+    ) = launchLoad {
+        val result = webRepository.fetchAgendaCompanies(
+            session = session,
+            companyName = search,
+            page = page,
+            pageSize = _uiState.value.agendaPageSize,
+        )
+        _uiState.update {
+            it.copy(
+                agendaCompanies = result.rows,
+                agendaTotal = result.total,
+                agendaPage = result.page,
+                agendaPageSize = result.pageSize,
+                agendaSearch = search,
+            )
+        }
+    }
+
     fun loadVisits(session: UserSession, profile: UserProfile?) = launchLoad {
         _uiState.update { it.copy(visits = api.fetchVisits(session, profile?.userRole, 1000)) }
     }
 
     fun completeVisit(session: UserSession, profile: UserProfile?, visitId: String, vidas: Int) = launchLoad {
         require(vidas >= 0) { "Quantidade de vidas deve ser um número inteiro válido." }
-        api.completeVisit(session, visitId, vidas)
+        val visit = _uiState.value.visits.firstOrNull { it.id == visitId }
+            ?: error("Visita não encontrada na agenda atual.")
+        visitsRepository.completeVisit(session, visit, vidas)
         _uiState.update { it.copy(visits = api.fetchVisits(session, profile?.userRole, 1000)) }
     }
 
@@ -41,27 +67,63 @@ class ParityViewModel(
         observation: String?,
     ) = launchLoad {
         require(reason.isNotBlank()) { "Informe o motivo da visita não realizada." }
-        api.registerNoVisit(session, visitId, reason.trim(), observation?.trim())
+        visitsRepository.registerNoVisit(session, visitId, reason.trim(), observation?.trim())
         _uiState.update { it.copy(visits = api.fetchVisits(session, profile?.userRole, 1000)) }
     }
 
-    fun loadClients(session: UserSession, search: String = "") = launchLoad {
-        _uiState.update { it.copy(clients = api.fetchClients(session, search, 300)) }
+    fun loadClients(
+        session: UserSession,
+        search: String = _uiState.value.clientSearch,
+        searchMode: String = _uiState.value.clientSearchMode,
+        situacao: String? = _uiState.value.clientSituacao,
+        page: Int = 1,
+    ) = launchLoad {
+        val result = webRepository.fetchCompanies(
+            session = session,
+            search = search,
+            searchMode = searchMode,
+            situacao = situacao,
+            page = page,
+            pageSize = _uiState.value.clientsPageSize,
+        )
+        _uiState.update {
+            it.copy(
+                clients = result.rows,
+                clientsTotal = result.total,
+                clientsPage = result.page,
+                clientsPageSize = result.pageSize,
+                clientSearch = search,
+                clientSearchMode = searchMode,
+                clientSituacao = situacao,
+            )
+        }
     }
 
     fun createClient(session: UserSession, payload: JSONObject, search: String = "") = launchLoad {
         api.createClient(session, payload)
-        _uiState.update { it.copy(clients = api.fetchClients(session, search, 300)) }
+        val result = webRepository.fetchCompanies(session, search, "geral", null, 1, _uiState.value.clientsPageSize)
+        _uiState.update {
+            it.copy(
+                clients = result.rows,
+                clientsTotal = result.total,
+                clientsPage = result.page,
+                clientSearch = search,
+                clientSearchMode = "geral",
+                clientSituacao = null,
+            )
+        }
     }
 
     fun updateClient(session: UserSession, clientId: String, payload: JSONObject, search: String = "") = launchLoad {
         api.updateClient(session, clientId, payload)
-        _uiState.update { it.copy(clients = api.fetchClients(session, search, 300)) }
+        val result = webRepository.fetchCompanies(session, search, _uiState.value.clientSearchMode, _uiState.value.clientSituacao, 1, _uiState.value.clientsPageSize)
+        _uiState.update { it.copy(clients = result.rows, clientsTotal = result.total, clientsPage = result.page) }
     }
 
     fun deleteClient(session: UserSession, clientId: String, search: String = "") = launchLoad {
         api.deleteClient(session, clientId)
-        _uiState.update { it.copy(clients = api.fetchClients(session, search, 300)) }
+        val result = webRepository.fetchCompanies(session, search, _uiState.value.clientSearchMode, _uiState.value.clientSituacao, 1, _uiState.value.clientsPageSize)
+        _uiState.update { it.copy(clients = result.rows, clientsTotal = result.total, clientsPage = result.page) }
     }
 
     fun loadAcceptance(session: UserSession, profile: UserProfile?, today: String) = launchLoad {

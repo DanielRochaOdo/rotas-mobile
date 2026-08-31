@@ -55,14 +55,20 @@ fun escapeBuildConfig(value: String): String = value
 
 fun quotedBuildConfig(value: String): String = "\"${escapeBuildConfig(value)}\""
 
-val supabaseUrl = readConfigValue("SUPABASE_URL", "VITE_SUPABASE_URL")
-val supabaseAnonKey = readConfigValue("SUPABASE_ANON_KEY", "VITE_SUPABASE_ANON_KEY")
-val dashboardUrl = readConfigValue("DASHBOARD_URL", "VITE_DASHBOARD_URL")
+// Client-safe configuration only. Never embed service-role keys, CRON_SECRET or
+// dashboard synchronization secrets in the APK.
+val supabaseUrl = readConfigValue("VITE_SUPABASE_URL", "SUPABASE_URL", "PRIMARY_SUPABASE_URL")
+val supabaseAnonKey = readConfigValue("VITE_SUPABASE_ANON_KEY", "SUPABASE_ANON_KEY")
+val dashboardUrl = readConfigValue("VITE_DASHBOARD_URL", "DASHBOARD_URL")
     .trim()
     .ifBlank { supabaseUrl }
-val dashboardAnonKey = readConfigValue("DASHBOARD_ANON_KEY", "VITE_DASHBOARD_ANON_KEY")
+val dashboardAnonKey = readConfigValue("VITE_DASHBOARD_ANON_KEY", "DASHBOARD_ANON_KEY")
     .trim()
     .ifBlank { supabaseAnonKey }
+val cepApiUrl = readConfigValue("VITE_CEP_API_URL", "CEP_API_URL")
+val nominatimProxyUrl = readConfigValue("VITE_NOMINATIM_PROXY_URL", "NOMINATIM_PROXY_URL")
+val odontoartProxyUrl = readConfigValue("VITE_ODONTOART_PROXY_URL", "ODONTOART_PROXY_URL")
+
 val appVersionName = (project.findProperty("ODONTOART_APP_VERSION_NAME") as? String)
     ?.trim()
     ?.takeIf { it.isNotEmpty() }
@@ -97,6 +103,9 @@ android {
         buildConfigField("String", "SUPABASE_ANON_KEY", quotedBuildConfig(supabaseAnonKey))
         buildConfigField("String", "DASHBOARD_URL", quotedBuildConfig(dashboardUrl))
         buildConfigField("String", "DASHBOARD_ANON_KEY", quotedBuildConfig(dashboardAnonKey))
+        buildConfigField("String", "CEP_API_URL", quotedBuildConfig(cepApiUrl))
+        buildConfigField("String", "NOMINATIM_PROXY_URL", quotedBuildConfig(nominatimProxyUrl))
+        buildConfigField("String", "ODONTOART_PROXY_URL", quotedBuildConfig(odontoartProxyUrl))
         buildConfigField("String", "UPDATE_METADATA_URL", quotedBuildConfig(""))
         buildConfigField("String", "UPDATE_APK_URL", quotedBuildConfig(""))
     }
