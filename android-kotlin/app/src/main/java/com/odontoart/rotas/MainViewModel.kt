@@ -2,11 +2,11 @@ package com.odontoart.rotas
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val api: SupabaseApi = SupabaseApi(),
@@ -15,7 +15,7 @@ class MainViewModel(
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
     fun clearError() {
-        _uiState.update { it.copy(errorMessage = null) }
+        _uiState.update { it.copy(errorMessage = null, accessDeniedMessage = null) }
     }
 
     fun signIn(email: String, password: String) {
@@ -23,7 +23,7 @@ class MainViewModel(
             _uiState.update {
                 it.copy(
                     isConfigured = false,
-                    errorMessage = "Configure SUPABASE_URL e SUPABASE_ANON_KEY no modulo Android.",
+                    errorMessage = "A configuração de acesso ao servidor não foi carregada neste APK.",
                 )
             }
             return
@@ -31,7 +31,7 @@ class MainViewModel(
 
         val normalizedEmail = email.trim()
         if (normalizedEmail.isBlank() || password.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "Informe email e senha.") }
+            _uiState.update { it.copy(errorMessage = "Informe e-mail e senha.") }
             return
         }
 
@@ -40,6 +40,7 @@ class MainViewModel(
                 isAuthenticating = true,
                 isLoadingRoutes = true,
                 errorMessage = null,
+                accessDeniedMessage = null,
             )
         }
 
@@ -47,6 +48,9 @@ class MainViewModel(
             runCatching {
                 val session = api.signIn(normalizedEmail, password)
                 val profile = api.fetchProfile(session)
+                if (profile.isInactive) {
+                    throw AccessDeniedException("Usuário inativo. Entre em contato com o administrador.")
+                }
                 val routes = api.fetchRoutes(session)
                 Triple(session, profile, routes)
             }.onSuccess { (session, profile, routes) ->
@@ -57,6 +61,7 @@ class MainViewModel(
                         isAuthenticating = false,
                         isLoadingRoutes = false,
                         errorMessage = null,
+                        accessDeniedMessage = null,
                         session = session,
                         profile = profile,
                         routes = routes,
@@ -64,15 +69,15 @@ class MainViewModel(
                         stops = emptyList(),
                     )
                 }
-                if (selectedRouteId != null) {
-                    loadStops(session, selectedRouteId)
-                }
+                if (selectedRouteId != null) loadStops(session, selectedRouteId)
             }.onFailure { error ->
+                val denied = error as? AccessDeniedException
                 _uiState.update {
                     it.copy(
                         isAuthenticating = false,
                         isLoadingRoutes = false,
-                        errorMessage = formatError(error),
+                        errorMessage = denied?.message ?: formatError(error),
+                        accessDeniedMessage = denied?.message,
                         session = null,
                         profile = null,
                         routes = emptyList(),
@@ -90,59 +95,40 @@ class MainViewModel(
 
     fun reloadRoutes() {
         val session = _uiState.value.session ?: return
-        _uiState.update {
-            it.copy(
-                isLoadingRoutes = true,
-                errorMessage = null,
-            )
-        }
+        _uiState.update { it.copy(isLoadingRoutes = true, errorMessage = null) }
 
         viewModelScope.launch {
-            runCatching {
-                api.fetchRoutes(session)
-            }.onSuccess { routes ->
-                val previousSelection = _uiState.value.selectedRouteId
-                val nextSelectedRoute = when {
-                    previousSelection != null && routes.any { it.id == previousSelection } -> previousSelection
-                    else -> routes.firstOrNull()?.id
+            runCatching { api.fetchRoutes(session) }
+                .onSuccess { routes ->
+                    val previousSelection = _uiState.value.selectedRouteId
+                    val nextSelectedRoute = when {
+                        previousSelection != null && routes.any { it.id == previousSelection } -> previousSelection
+                        else -> routes.firstOrNull()?.id
+                    }
+                    _uiState.update {
+                        it.copy(
+                            isLoadingRoutes = false,
+                            routes = routes,
+                            selectedRouteId = nextSelectedRoute,
+                            stops = if (nextSelectedRoute == null) emptyList() else it.stops,
+                        )
+                    }
+                    if (nextSelectedRoute == null) {
+                        _uiState.update { it.copy(stops = emptyList(), isLoadingStops = false) }
+                    } else {
+                        loadStops(session, nextSelectedRoute)
+                    }
                 }
-
-                _uiState.update {
-                    it.copy(
-                        isLoadingRoutes = false,
-                        routes = routes,
-                        selectedRouteId = nextSelectedRoute,
-                        stops = if (nextSelectedRoute == null) emptyList() else it.stops,
-                    )
+                .onFailure { error ->
+                    _uiState.update { it.copy(isLoadingRoutes = false, errorMessage = formatError(error)) }
                 }
-
-                if (nextSelectedRoute == null) {
-                    _uiState.update { it.copy(stops = emptyList(), isLoadingStops = false) }
-                } else {
-                    loadStops(session, nextSelectedRoute)
-                }
-            }.onFailure { error ->
-                _uiState.update {
-                    it.copy(
-                        isLoadingRoutes = false,
-                        errorMessage = formatError(error),
-                    )
-                }
-            }
         }
     }
 
     fun selectRoute(routeId: String) {
         if (_uiState.value.selectedRouteId == routeId) return
         val session = _uiState.value.session ?: return
-        _uiState.update {
-            it.copy(
-                selectedRouteId = routeId,
-                stops = emptyList(),
-                errorMessage = null,
-            )
-        }
-
+        _uiState.update { it.copy(selectedRouteId = routeId, stops = emptyList(), errorMessage = null) }
         loadStops(session, routeId)
     }
 
@@ -153,40 +139,28 @@ class MainViewModel(
 
         val normalizedName = name.trim()
         if (normalizedName.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "Nome da rota e obrigatorio.") }
+            _uiState.update { it.copy(errorMessage = "Nome da rota é obrigatório.") }
             return
         }
-
         val normalizedDate = date?.trim()?.takeIf { it.isNotBlank() }
-
-        _uiState.update {
-            it.copy(
-                isSavingRoute = true,
-                errorMessage = null,
-            )
-        }
+        _uiState.update { it.copy(isSavingRoute = true, errorMessage = null) }
 
         viewModelScope.launch {
-            runCatching {
-                api.createRoute(session, normalizedName, normalizedDate)
-            }.onSuccess { createdRoute ->
-                _uiState.update {
-                    it.copy(
-                        isSavingRoute = false,
-                        routes = listOf(createdRoute) + it.routes,
-                        selectedRouteId = createdRoute.id,
-                        stops = emptyList(),
-                    )
+            runCatching { api.createRoute(session, normalizedName, normalizedDate) }
+                .onSuccess { createdRoute ->
+                    _uiState.update {
+                        it.copy(
+                            isSavingRoute = false,
+                            routes = listOf(createdRoute) + it.routes,
+                            selectedRouteId = createdRoute.id,
+                            stops = emptyList(),
+                        )
+                    }
+                    loadStops(session, createdRoute.id)
                 }
-                loadStops(session, createdRoute.id)
-            }.onFailure { error ->
-                _uiState.update {
-                    it.copy(
-                        isSavingRoute = false,
-                        errorMessage = formatError(error),
-                    )
+                .onFailure { error ->
+                    _uiState.update { it.copy(isSavingRoute = false, errorMessage = formatError(error)) }
                 }
-            }
         }
     }
 
@@ -195,97 +169,70 @@ class MainViewModel(
         val session = state.session ?: return
         if (!state.canEditRoutes) return
 
-        _uiState.update {
-            it.copy(
-                isDeletingRouteId = routeId,
-                errorMessage = null,
-            )
-        }
-
+        _uiState.update { it.copy(isDeletingRouteId = routeId, errorMessage = null) }
         viewModelScope.launch {
-            runCatching {
-                api.deleteRoute(session, routeId)
-            }.onSuccess {
-                val currentState = _uiState.value
-                val remainingRoutes = currentState.routes.filterNot { it.id == routeId }
-                val nextSelectedRoute = when {
-                    currentState.selectedRouteId != routeId -> currentState.selectedRouteId
-                    else -> remainingRoutes.firstOrNull()?.id
+            runCatching { api.deleteRoute(session, routeId) }
+                .onSuccess {
+                    val currentState = _uiState.value
+                    val remainingRoutes = currentState.routes.filterNot { it.id == routeId }
+                    val nextSelectedRoute = when {
+                        currentState.selectedRouteId != routeId -> currentState.selectedRouteId
+                        else -> remainingRoutes.firstOrNull()?.id
+                    }
+                    _uiState.update {
+                        it.copy(
+                            routes = remainingRoutes,
+                            selectedRouteId = nextSelectedRoute,
+                            stops = if (nextSelectedRoute == null) emptyList() else it.stops,
+                            isDeletingRouteId = null,
+                        )
+                    }
+                    if (nextSelectedRoute == null) {
+                        _uiState.update { it.copy(stops = emptyList(), isLoadingStops = false) }
+                    } else {
+                        loadStops(session, nextSelectedRoute)
+                    }
                 }
-
-                _uiState.update {
-                    it.copy(
-                        routes = remainingRoutes,
-                        selectedRouteId = nextSelectedRoute,
-                        stops = if (nextSelectedRoute == null) emptyList() else it.stops,
-                        isDeletingRouteId = null,
-                    )
+                .onFailure { error ->
+                    _uiState.update { it.copy(isDeletingRouteId = null, errorMessage = formatError(error)) }
                 }
-
-                if (nextSelectedRoute == null) {
-                    _uiState.update { it.copy(stops = emptyList(), isLoadingStops = false) }
-                } else {
-                    loadStops(session, nextSelectedRoute)
-                }
-            }.onFailure { error ->
-                _uiState.update {
-                    it.copy(
-                        isDeletingRouteId = null,
-                        errorMessage = formatError(error),
-                    )
-                }
-            }
         }
     }
 
     private fun loadStops(session: UserSession, routeId: String) {
-        viewModelScope.launch {
-            loadStopsInternal(session, routeId)
-        }
+        viewModelScope.launch { loadStopsInternal(session, routeId) }
     }
 
     private suspend fun loadStopsInternal(session: UserSession, routeId: String) {
-        _uiState.update {
-            it.copy(
-                isLoadingStops = true,
-                errorMessage = null,
-            )
-        }
-
-        runCatching {
-            api.fetchRouteStops(session, routeId)
-        }.onSuccess { stops ->
-            _uiState.update { state ->
-                if (state.selectedRouteId != routeId) {
-                    state
-                } else {
-                    state.copy(
-                        isLoadingStops = false,
-                        stops = stops,
-                    )
+        _uiState.update { it.copy(isLoadingStops = true, errorMessage = null) }
+        runCatching { api.fetchRouteStops(session, routeId) }
+            .onSuccess { stops ->
+                _uiState.update { state ->
+                    if (state.selectedRouteId != routeId) state
+                    else state.copy(isLoadingStops = false, stops = stops)
                 }
             }
-        }.onFailure { error ->
-            _uiState.update { state ->
-                if (state.selectedRouteId != routeId) {
-                    state
-                } else {
-                    state.copy(
-                        isLoadingStops = false,
-                        errorMessage = formatError(error),
-                        stops = emptyList(),
-                    )
+            .onFailure { error ->
+                _uiState.update { state ->
+                    if (state.selectedRouteId != routeId) state
+                    else state.copy(isLoadingStops = false, errorMessage = formatError(error), stops = emptyList())
                 }
             }
-        }
     }
 
     private fun formatError(error: Throwable): String {
-        val message = error.message?.trim()
-        return if (message.isNullOrBlank()) {
-            "Falha inesperada. Tente novamente."
-        } else {
-            message
+        val message = error.message?.trim().orEmpty()
+        val normalized = message.lowercase()
+        return when {
+            normalized.contains("invalid login credentials") -> "E-mail ou senha inválidos."
+            normalized.contains("failed to connect") || normalized.contains("network") || normalized.contains("timeout") ->
+                "Falha de conexão. Verifique sua internet e tente novamente."
+            normalized.contains("jwt") || normalized.contains("401") ->
+                "Erro de autenticação da sessão. Faça login novamente."
+            message.isBlank() -> "Falha inesperada. Tente novamente."
+            else -> message
         }
     }
+
+    private class AccessDeniedException(message: String) : IllegalStateException(message)
 }

@@ -8,10 +8,27 @@ data class UserSession(
 )
 
 data class UserProfile(
+    val profileId: String?,
     val userId: String,
     val displayName: String?,
+    val nome: String?,
     val role: String?,
-)
+    val isInactive: Boolean = false,
+    val canAccessPreCadastro: Boolean = false,
+    val canAccessNextRouteDashboard: Boolean = false,
+    val forceReauthAfter: String? = null,
+    val supervisorId: String? = null,
+    val vendedorId: String? = null,
+    val createdAt: String? = null,
+) {
+    val userRole: UserRole?
+        get() = UserRole.from(role)
+
+    val resolvedName: String
+        get() = nome?.takeIf { it.isNotBlank() }
+            ?: displayName?.takeIf { it.isNotBlank() }
+            ?: "Perfil pendente"
+}
 
 data class RouteItem(
     val id: String,
@@ -51,6 +68,7 @@ data class MainUiState(
     val isSavingRoute: Boolean = false,
     val isDeletingRouteId: String? = null,
     val errorMessage: String? = null,
+    val accessDeniedMessage: String? = null,
     val session: UserSession? = null,
     val profile: UserProfile? = null,
     val routes: List<RouteItem> = emptyList(),
@@ -58,5 +76,5 @@ data class MainUiState(
     val stops: List<RouteStopItem> = emptyList(),
 ) {
     val canEditRoutes: Boolean
-        get() = profile?.role == "SUPERVISOR" || profile?.role == "ASSISTENTE"
+        get() = profile?.userRole == UserRole.SUPERVISOR || profile?.userRole == UserRole.ASSISTENTE
 }

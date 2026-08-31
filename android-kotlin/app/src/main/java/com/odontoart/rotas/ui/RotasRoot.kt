@@ -65,7 +65,7 @@ fun RotasRoot(viewModel: MainViewModel = viewModel()) {
             onClearError = viewModel::clearError,
         )
     } else {
-        RotasApp(viewModel)
+        NativeParityApp(mainViewModel = viewModel)
     }
 }
 
