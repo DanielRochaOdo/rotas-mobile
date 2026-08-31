@@ -2,8 +2,6 @@ package com.odontoart.rotas
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,6 +11,7 @@ import org.json.JSONObject
 
 class ParityViewModel(
     private val api: SupabaseApi = SupabaseApi(),
+    private val dashboardRepository: DashboardRepository = DashboardRepository(),
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ParityUiState())
     val uiState: StateFlow<ParityUiState> = _uiState.asStateFlow()
@@ -20,26 +19,8 @@ class ParityViewModel(
     fun clearError() = _uiState.update { it.copy(errorMessage = null) }
 
     fun loadDashboard(session: UserSession, profile: UserProfile?, routeCount: Int) = launchLoad {
-        val (visits, clients) = coroutineScope {
-            val visitsAsync = async { api.fetchVisits(session, profile?.userRole, 1000) }
-            val clientsAsync = async { api.fetchClients(session, limit = 500) }
-            visitsAsync.await() to clientsAsync.await()
-        }
-        val completed = visits.count { it.completedAt != null || it.completedVidas != null || it.noVisitReason != null }
-        _uiState.update {
-            it.copy(
-                visits = visits,
-                clients = clients,
-                dashboard = DashboardSummary(
-                    visits = visits.size,
-                    completedVisits = completed,
-                    pendingVisits = (visits.size - completed).coerceAtLeast(0),
-                    completedLives = visits.sumOf { visit -> visit.completedVidas ?: 0 },
-                    companies = clients.size,
-                    routes = routeCount,
-                ),
-            )
-        }
+        val summary = dashboardRepository.fetchCurrentMonthSummary(session, profile?.userRole, routeCount)
+        _uiState.update { it.copy(dashboard = summary) }
     }
 
     fun loadVisits(session: UserSession, profile: UserProfile?) = launchLoad {
@@ -47,7 +28,7 @@ class ParityViewModel(
     }
 
     fun completeVisit(session: UserSession, profile: UserProfile?, visitId: String, vidas: Int) = launchLoad {
-        require(vidas >= 0) { "Quantidade de vidas deve ser um numero inteiro valido." }
+        require(vidas >= 0) { "Quantidade de vidas deve ser um número inteiro válido." }
         api.completeVisit(session, visitId, vidas)
         _uiState.update { it.copy(visits = api.fetchVisits(session, profile?.userRole, 1000)) }
     }
@@ -59,7 +40,7 @@ class ParityViewModel(
         reason: String,
         observation: String?,
     ) = launchLoad {
-        require(reason.isNotBlank()) { "Informe o motivo da visita nao realizada." }
+        require(reason.isNotBlank()) { "Informe o motivo da visita não realizada." }
         api.registerNoVisit(session, visitId, reason.trim(), observation?.trim())
         _uiState.update { it.copy(visits = api.fetchVisits(session, profile?.userRole, 1000)) }
     }
@@ -103,7 +84,7 @@ class ParityViewModel(
     }
 
     fun registerAcceptance(session: UserSession, profile: UserProfile?, date: String, vidas: Int, today: String) = launchLoad {
-        require(vidas >= 0) { "Quantidade de vidas deve ser um numero inteiro valido." }
+        require(vidas >= 0) { "Quantidade de vidas deve ser um número inteiro válido." }
         api.registerDigitalAcceptance(session, profile?.displayName ?: profile?.nome, date, vidas)
         when (profile?.userRole) {
             UserRole.VENDEDOR -> {
