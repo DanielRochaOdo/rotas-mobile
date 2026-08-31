@@ -2,7 +2,6 @@ package com.odontoart.rotas.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -73,16 +72,10 @@ import com.odontoart.rotas.MainViewModel
 import com.odontoart.rotas.ParityViewModel
 import com.odontoart.rotas.UserRole
 import com.odontoart.rotas.ui.theme.RotasCanvas
-import com.odontoart.rotas.ui.theme.RotasInk
 import com.odontoart.rotas.ui.theme.RotasSea
 import com.odontoart.rotas.ui.theme.RotasTheme
 import kotlinx.coroutines.launch
 
-/**
- * Shell nativo cuja fonte de verdade e src/layouts/AppLayout.tsx do Odontoart-rotas.
- * Nenhum WebView e utilizado: estrutura, permissoes e identidade visual sao reproduzidas
- * em Jetpack Compose e as telas chamadas abaixo seguem os contratos do repositorio web.
- */
 internal enum class ExactDestination(
     val title: String,
     val icon: ImageVector,
@@ -111,8 +104,9 @@ fun ExactParityApp(
     val session = mainState.session ?: return
     val profile = mainState.profile
     val role = profile?.userRole
+    val systemDarkTheme = isSystemInDarkTheme()
 
-    var darkTheme by rememberSaveable { mutableStateOf(isSystemInDarkTheme()) }
+    var darkTheme by rememberSaveable { mutableStateOf(systemDarkTheme) }
     var destinationName by rememberSaveable { mutableStateOf(ExactDestination.DASHBOARD.name) }
     val destination = remember(destinationName) { ExactDestination.valueOf(destinationName) }
     val available = remember(role) {
